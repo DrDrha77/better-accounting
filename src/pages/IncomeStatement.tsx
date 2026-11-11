@@ -1,0 +1,58 @@
+import { useMemo, useState } from 'react';
+import { fmtDate } from '../components/format';
+import { ReportShell } from '../components/ReportShell';
+import { Row, Section, StatementCard } from '../components/Statement';
+import { Field, inputClass } from '../components/ui';
+import { centsToCsv } from '../engine/csv';
+import { incomeStatement } from '../engine/reports';
+import { useBooks } from '../store/useBooks';
+
+export function periodLabel(from: string, to: string): string {
+  if (from && to) return `For the period ${fmtDate(from)} – ${fmtDate(to)}`;
+  if (from) return `From ${fmtDate(from)}`;
+  if (to) return `Through ${fmtDate(to)}`;
+  return 'All dates';
+}
+
+export function IncomeStatement() {
+  const { accounts, entries } = useBooks();
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const is = useMemo(() => incomeStatement(accounts, entries, from || undefined, to || undefined), [accounts, entries, from, to]);
+  const period = periodLabel(from, to);
+
+  const csvRows = () => [
+    ['Income Statement', period],
+    ['Section', 'Account', 'Amount'],
+    ...is.revenues.map((l) => ['Revenue', l.account.name, centsToCsv(l.amount)]),
+    ['Revenue', 'Total revenue', centsToCsv(is.totalRevenue)],
+    ...is.expenses.map((l) => ['Expenses', l.account.name, centsToCsv(l.amount)]),
+    ['Expenses', 'Total expenses', centsToCsv(is.totalExpenses)],
+    ['', is.netIncome >= 0 ? 'Net income' : 'Net loss', centsToCsv(is.netIncome)],
+  ];
+
+  return (
+    <ReportShell
+      title="Income Statement"
+      subtitle="Revenues less expenses for a period."
+      csvName="income-statement.csv"
+      csvRows={csvRows}
+      filters={
+        <>
+          <Field label="From">
+            <input type="date" className={inputClass} value={from} onChange={(e) => setFrom(e.target.value)} />
+          </Field>
+          <Field label="To">
+            <input type="date" className={inputClass} value={to} onChange={(e) => setTo(e.target.value)} />
+          </Field>
+        </>
+      }
+    >
+      <StatementCard title="Income Statement" period={period}>
+        <Section title="Revenue" lines={is.revenues} totalLabel="Total revenue" total={is.totalRevenue} />
+        <Section title="Expenses" lines={is.expenses} totalLabel="Total expenses" total={is.totalExpenses} />
+        <Row label={is.netIncome >= 0 ? 'Net income' : 'Net loss'} amount={is.netIncome} bold doubleRule />
+      </StatementCard>
+    </ReportShell>
+  );
+}
