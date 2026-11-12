@@ -46,9 +46,9 @@ src/
   pages/             one file per screen
 ```
 
-## The parser
+## Recognizing transactions
 
-`RuleBasedParser` (in `src/engine/parser/ruleParser.ts`) implements the `TransactionParser` interface:
+Typing a sentence goes through two recognizers (`src/engine/parser/`), both behind the same `TransactionParser` interface:
 
 ```ts
 interface TransactionParser {
@@ -56,25 +56,29 @@ interface TransactionParser {
 }
 ```
 
-It finds a single amount (`40000`, `$40,000`, `1,200.50`, `10k`) and an optional date (`2026-03-15`, `3/15`, `yesterday`), then scores each template. If there's no amount, more than one amount, no match, or a tie between templates, it returns `unmatched` and the app opens the manual entry form. It never guesses. A matched result is still only a proposal: the user confirms or edits it before it is saved.
+**1. Built-in rules** (`ruleParser.ts`, instant and free). It finds a single amount (`40000`, `$40,000`, `1,200.50`, `50k`) and an optional date (`2026-03-15`, `3/15`, `yesterday`), then scores the templates in `templates.ts`. It covers owner investments and withdrawals; buying equipment, vehicles, furniture or supplies for cash, on credit or with a loan; paying or accruing rent, wages, utilities, advertising, repairs, travel, interest and bank fees; earning, billing and collecting revenue; customer deposits; and borrowing and repaying loans. If there's no amount, more than one amount, no match, or a tie, it gives up rather than guessing.
 
-To plug in an LLM later, write another class that implements `TransactionParser` and swap it in at the top of `src/pages/Dashboard.tsx`.
+**2. AI** (`claudeParser.ts`, optional). In **Settings**, paste an Anthropic API key and Claude Opus 5.5 handles the sentences the rules can't, such as multi-line entries ("paid 5,000 cash and financed the rest"), written-out numbers, and unusual wording. The model gets the sentence, today's date and the chart of accounts (names and numbers only), and returns structured JSON. The app then checks it: real accounts only, amounts parsed to cents, debits = credits. Assumptions it made (for example "assumed cash") are shown above the preview. Modes: *when the rules can't tell* (default), *always*, or *off*. `hybridParser.ts` combines the two.
 
-### Adding a transaction type
+The key is stored only in that browser's localStorage and is sent only to `api.anthropic.com`; there is no backend. Each AI call is billed to the key's Anthropic account. The Anthropic SDK is loaded lazily, only the first time the AI runs.
 
-Add an object to `TEMPLATES` in `src/engine/parser/templates.ts`:
+Every proposal, from rules or AI, is shown as an editable preview and nothing is saved until you confirm it.
+
+### Adding a transaction type to the rules
+
+For a new asset or expense category, add it to `ASSETS` or `EXPENSES` in `templates.ts` and call `purchaseTemplates(...)` / `expenseTemplates(...)`, which generate the cash, on-credit and loan (or pay-later) variants. For anything else, add an object to `TEMPLATES`:
 
 ```ts
 {
-  id: 'pay-advertising',
-  label: 'Pay advertising',
-  example: 'Paid 300 for advertising',
-  match: [/\b(paid|pays?)\b/, /\badvertis(ing|ement)\b/], // all must match
-  boost: [/\bcash\b/],                                      // optional, raises the score
-  exclude: [/\bon account\b/],                              // optional, disqualifies
-  debit: 'advertising_expense',                             // account systemKey
-  credit: 'cash',
+  id: 'owner-investment',
+  label: 'Owner investment',
+  example: 'Owner invested 40000 into the business',
+  match: [/\b(invest(ed|s)?|contribut(ed|ion))\b/], // all must match
+  boost: [/\bowner\b/],                              // optional, raises the score
+  exclude: [/\bwithdr/],                             // optional, disqualifies
+  debit: 'cash',                                     // account systemKey
+  credit: 'capital',
 }
 ```
 
-`debit`/`credit` refer to an account's `systemKey`, so renaming accounts doesn't break templates. A new key needs a matching account in `DEFAULT_ACCOUNTS` (`src/engine/accounts.ts`). The test suite checks that every template parses its own `example`.
+`debit`/`credit` refer to an account's `systemKey`, so renaming accounts doesn't break templates. A new key needs a matching account in `DEFAULT_ACCOUNTS` (`src/engine/accounts.ts`); saved books pick up new default accounts automatically on load. The test suite checks that every template parses its own `example`.

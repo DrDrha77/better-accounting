@@ -12,6 +12,7 @@ import { Ledger } from './pages/Ledger';
 import { OpeningBalances } from './pages/OpeningBalances';
 import { OpeningStatement } from './pages/OpeningStatement';
 import { OwnersEquity } from './pages/OwnersEquity';
+import { Settings } from './pages/Settings';
 import { TAccounts } from './pages/TAccounts';
 import { TrialBalance } from './pages/TrialBalance';
 
@@ -31,6 +32,7 @@ const router = createHashRouter([
       { path: '/opening-statement', element: <OpeningStatement /> },
       { path: '/opening-balances', element: <OpeningBalances /> },
       { path: '/accounts', element: <ChartOfAccounts /> },
+      { path: '/settings', element: <Settings /> },
       { path: '*', element: <Dashboard /> },
     ],
   },

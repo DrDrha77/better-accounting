@@ -6,13 +6,10 @@ import { Button, Card, StatusBadge } from '../components/ui';
 import { findBySystemKey, SYSTEM_KEYS } from '../engine/accounts';
 import { entryNumberLabel, todayISO } from '../engine/journal';
 import { ledgerFor } from '../engine/ledger';
-import { RuleBasedParser } from '../engine/parser/ruleParser';
-import type { ParseResult, TransactionParser } from '../engine/parser/types';
+import type { ParseResult } from '../engine/parser/types';
 import { balanceSheet, trialBalance } from '../engine/reports';
+import { useTransactionParser } from '../components/useTransactionParser';
 import { useBooks } from '../store/useBooks';
-
-/** Swap this for an LLM-backed implementation of TransactionParser later. */
-const parser: TransactionParser = new RuleBasedParser();
 
 const EXAMPLES = [
   'Owner invested 40000 into the business',
@@ -30,13 +27,15 @@ const EXAMPLES = [
 type Mode =
   | { kind: 'idle' }
   | { kind: 'preview'; result: Extract<ParseResult, { status: 'matched' }>; text: string; nonce: number }
-  | { kind: 'manual'; text: string; reason?: string; candidates?: string[]; nonce: number };
+  | { kind: 'manual'; text: string; reason?: string; candidates?: string[]; fromAi?: boolean; nonce: number };
 
 export function Dashboard() {
   const { accounts, entries, addEntry, loadSample } = useBooks();
   const [text, setText] = useState('');
   const [mode, setMode] = useState<Mode>({ kind: 'idle' });
   const [saved, setSaved] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const { parser, aiEnabled } = useTransactionParser();
 
   const stats = useMemo(() => {
     const cash = findBySystemKey(accounts, SYSTEM_KEYS.cash);
@@ -50,10 +49,24 @@ export function Dashboard() {
 
   const submit = async (input = text) => {
     setSaved(null);
-    if (!input.trim()) return;
-    const result = await parser.parse(input, { accounts, today: todayISO() });
-    if (result.status === 'matched') setMode({ kind: 'preview', result, text: input, nonce: Date.now() });
-    else setMode({ kind: 'manual', text: input, reason: result.reason, candidates: result.candidates, nonce: Date.now() });
+    if (!input.trim() || busy) return;
+    setBusy(true);
+    setMode({ kind: 'idle' });
+    try {
+      const result = await parser.parse(input, { accounts, today: todayISO() });
+      if (result.status === 'matched') setMode({ kind: 'preview', result, text: input, nonce: Date.now() });
+      else
+        setMode({
+          kind: 'manual',
+          text: input,
+          reason: result.reason,
+          candidates: result.candidates,
+          fromAi: result.source === 'ai',
+          nonce: Date.now(),
+        });
+    } finally {
+      setBusy(false);
+    }
   };
 
   const done = (description: string) => {
@@ -83,10 +96,11 @@ export function Dashboard() {
             placeholder="Describe a transaction, e.g. “Paid rent 1200”"
             value={text}
             onChange={(e) => setText(e.target.value)}
+            disabled={busy}
             autoFocus
           />
-          <Button type="submit" variant="primary" className="px-5 py-3 text-base">
-            Preview entry
+          <Button type="submit" variant="primary" className="px-5 py-3 text-base" disabled={busy}>
+            {busy ? 'Thinking…' : 'Preview entry'}
           </Button>
         </form>
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
@@ -129,9 +143,25 @@ export function Dashboard() {
               accounts={accounts}
               initial={{ ...mode.result, sourceText: mode.text }}
               banner={
-                <div className="rounded-md bg-sky-50 px-3 py-2 text-sm text-sky-900">
-                  Recognised as <strong>{mode.result.templateLabel}</strong> for {formatCents(mode.result.amount)}. Check the entry below — you can change
-                  the date, accounts or amounts before saving.
+                <div className="space-y-2">
+                  <div className="rounded-md bg-sky-50 px-3 py-2 text-sm text-sky-900">
+                    {mode.result.source === 'ai' ? (
+                      <>
+                        <span className="mr-1.5 rounded bg-violet-100 px-1.5 py-0.5 text-xs font-semibold text-violet-800">AI</span>
+                        Claude drafted this entry for {formatCents(mode.result.amount)}.
+                      </>
+                    ) : (
+                      <>
+                        Recognised as <strong>{mode.result.templateLabel}</strong> for {formatCents(mode.result.amount)}.
+                      </>
+                    )}{' '}
+                    Check the entry below — you can change the date, accounts or amounts before saving.
+                  </div>
+                  {mode.result.notes && (
+                    <div className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                      <strong>Assumed:</strong> {mode.result.notes}
+                    </div>
+                  )}
                 </div>
               }
               saveLabel="Confirm & save"
@@ -159,6 +189,15 @@ export function Dashboard() {
                   <div className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
                     <strong>Couldn't create this entry automatically.</strong> {mode.reason}
                     {mode.candidates && <> Possible matches: {mode.candidates.join(', ')}.</>} Enter the debits and credits below.
+                    {!aiEnabled && !mode.fromAi && (
+                      <div className="mt-1 text-xs">
+                        Tip: add an Anthropic API key in{' '}
+                        <Link to="/settings" className="underline">
+                          Settings
+                        </Link>{' '}
+                        and AI will handle sentences like this.
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-sm font-medium text-slate-700">Manual journal entry</div>

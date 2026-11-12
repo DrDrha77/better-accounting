@@ -42,6 +42,8 @@ export const SYSTEM_KEYS = {
   supplies: 'supplies',
   prepaidInsurance: 'prepaid_insurance',
   equipment: 'equipment',
+  vehicles: 'vehicles',
+  furniture: 'furniture',
   accountsPayable: 'ap',
   notesPayable: 'notes_payable',
   wagesPayable: 'wages_payable',
@@ -55,6 +57,10 @@ export const SYSTEM_KEYS = {
   suppliesExpense: 'supplies_expense',
   utilitiesExpense: 'utilities_expense',
   insuranceExpense: 'insurance_expense',
+  advertisingExpense: 'advertising_expense',
+  repairsExpense: 'repairs_expense',
+  travelExpense: 'travel_expense',
+  interestExpense: 'interest_expense',
   miscExpense: 'misc_expense',
 } as const;
 
@@ -70,6 +76,8 @@ export const DEFAULT_ACCOUNTS: Account[] = [
   acct(1200, 'Supplies', 'asset', K.supplies),
   acct(1300, 'Prepaid Insurance', 'asset', K.prepaidInsurance),
   acct(1500, 'Equipment', 'asset', K.equipment),
+  acct(1600, 'Vehicles', 'asset', K.vehicles),
+  acct(1700, 'Furniture & Fixtures', 'asset', K.furniture),
   acct(2000, 'Accounts Payable', 'liability', K.accountsPayable),
   acct(2100, 'Notes Payable', 'liability', K.notesPayable),
   acct(2200, 'Wages Payable', 'liability', K.wagesPayable),
@@ -83,6 +91,10 @@ export const DEFAULT_ACCOUNTS: Account[] = [
   acct(5200, 'Supplies Expense', 'expense', K.suppliesExpense),
   acct(5300, 'Utilities Expense', 'expense', K.utilitiesExpense),
   acct(5400, 'Insurance Expense', 'expense', K.insuranceExpense),
+  acct(5500, 'Advertising Expense', 'expense', K.advertisingExpense),
+  acct(5600, 'Repairs & Maintenance Expense', 'expense', K.repairsExpense),
+  acct(5700, 'Travel Expense', 'expense', K.travelExpense),
+  acct(5800, 'Interest Expense', 'expense', K.interestExpense),
   acct(5900, 'Miscellaneous Expense', 'expense', K.miscExpense),
 ];
 
@@ -113,4 +125,19 @@ export function suggestAccountNumber(accounts: Account[], type: AccountType): nu
 
 export function typeForNumber(n: number): AccountType | undefined {
   return ACCOUNT_TYPES.find((t) => n >= TYPE_RANGES[t][0] && n <= TYPE_RANGES[t][1]);
+}
+
+/**
+ * Add any default accounts that a saved chart of accounts is missing (e.g. after an app update
+ * introduces new defaults). Skips one whose systemKey, number or name is already taken.
+ */
+export function withMissingDefaults(accounts: Account[]): Account[] {
+  const keys = new Set(accounts.map((a) => a.systemKey).filter(Boolean));
+  const ids = new Set(accounts.map((a) => a.id));
+  const numbers = new Set(accounts.map((a) => a.number));
+  const names = new Set(accounts.map((a) => a.name.toLowerCase()));
+  const added = DEFAULT_ACCOUNTS.filter(
+    (d) => !keys.has(d.systemKey) && !ids.has(d.id) && !numbers.has(d.number) && !names.has(d.name.toLowerCase()),
+  ).map((d) => ({ ...d }));
+  return added.length ? [...accounts, ...added] : accounts;
 }

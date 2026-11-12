@@ -15,6 +15,7 @@ export const NAV = [
   { to: '/opening-statement', label: 'Opening Statement' },
   { to: '/opening-balances', label: 'Opening Balances' },
   { to: '/accounts', label: 'Chart of Accounts' },
+  { to: '/settings', label: 'Settings' },
 ];
 
 export function Layout() {
