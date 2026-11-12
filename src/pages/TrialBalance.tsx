@@ -38,7 +38,7 @@ export function TrialBalance() {
       ) : (
         <Card className="overflow-x-auto">
           <table className="w-full min-w-[28rem] text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <thead className="bg-slate-400/10 text-left text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-4 py-2 font-medium">#</th>
                 <th className="px-4 py-2 font-medium">Account</th>
@@ -46,7 +46,7 @@ export function TrialBalance() {
                 <th className="px-4 py-2 text-right font-medium">Credit</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-400/15">
               {tb.rows.map((r) => (
                 <tr key={r.account.id}>
                   <td className="px-4 py-1.5 text-slate-500">{r.account.number}</td>

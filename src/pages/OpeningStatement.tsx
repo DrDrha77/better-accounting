@@ -23,7 +23,7 @@ export function OpeningStatement() {
         <>
           <BalanceSheetBody bs={os} title="Opening Statement" period={`As of ${fmtDate(os.asOf)}`} showNetIncome={false} />
           <p className="mt-4 text-center text-sm print:hidden">
-            <Link to="/opening-balances" className="text-emerald-700 hover:underline">
+            <Link to="/opening-balances" className="text-cyan-700 hover:underline">
               Edit opening balances →
             </Link>
           </p>
@@ -31,7 +31,7 @@ export function OpeningStatement() {
       ) : (
         <EmptyState>
           No opening balances yet.{' '}
-          <Link to="/opening-balances" className="text-emerald-700 underline">
+          <Link to="/opening-balances" className="text-cyan-700 underline">
             Enter opening balances
           </Link>{' '}
           to see the opening statement.

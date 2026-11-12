@@ -75,8 +75,8 @@ describe('ClaudeParser', () => {
     ['bad amount', { parsed_output: entry({ lines: [{ accountNumber: 1600, side: 'debit', amount: 'lots' }, { accountNumber: 1000, side: 'credit', amount: '9' }] }) }, /lots/],
     ['refusal', { stop_reason: 'refusal' }, /declined/],
     ['unreadable', { parsed_output: null }, /couldn't be read/],
-    ['bad key', Object.assign(new Error('401'), { status: 401 }), /API key was rejected/],
-    ['rate limit', Object.assign(new Error('429'), { status: 429 }), /rate-limited/],
+    ['bad key', Object.assign(new Error('401'), { status: 401 }), /Anthropic API key was rejected/],
+    ['rate limit', Object.assign(new Error('429'), { status: 429 }), /rate-limiting/],
     ['offline', new TypeError('Failed to fetch'), /internet connection/],
   ])('never saves a bad proposal: %s', async (_name, reply, reason) => {
     const { client } = fakeClient(reply);

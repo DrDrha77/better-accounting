@@ -66,7 +66,7 @@ function LedgerTable({ ledger }: { ledger: LedgerT }) {
   const side = normalSide(ledger.account);
   return (
     <Card className="overflow-x-auto break-inside-avoid">
-      <div className="flex items-baseline justify-between border-b border-slate-200 px-4 py-2.5">
+      <div className="flex items-baseline justify-between border-b border-slate-400/25 px-4 py-2.5">
         <h2 className="font-medium text-slate-900">
           {ledger.account.number} · {ledger.account.name}
         </h2>
@@ -83,7 +83,7 @@ function LedgerTable({ ledger }: { ledger: LedgerT }) {
             <th className="px-4 py-2 text-right font-medium">Balance</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-slate-400/15">
           {ledger.rows.length === 0 && (
             <tr>
               <td colSpan={6} className="px-4 py-3 text-center text-slate-400">
@@ -102,7 +102,7 @@ function LedgerTable({ ledger }: { ledger: LedgerT }) {
             </tr>
           ))}
         </tbody>
-        <tfoot className="border-t border-slate-300 font-medium">
+        <tfoot className="border-t border-slate-400/40 font-medium">
           <tr>
             <td className="px-4 py-2" colSpan={3}>
               Totals / ending balance

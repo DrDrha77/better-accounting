@@ -92,7 +92,7 @@ export function Dashboard() {
         >
           <input
             aria-label="Describe a transaction"
-            className="flex-1 rounded-md border border-slate-300 px-4 py-3 text-base focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+            className="glass-inset flex-1 rounded-full px-5 py-3 text-base text-slate-900 placeholder:text-slate-400 transition focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
             placeholder="Describe a transaction, e.g. “Paid rent 1200”"
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -109,7 +109,7 @@ export function Dashboard() {
             <button
               key={ex}
               type="button"
-              className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600 hover:bg-emerald-50 hover:text-emerald-800"
+              className="glass-inset rounded-full px-3 py-1 text-xs text-slate-600 transition-all duration-300 ease-bubble hover:scale-105 hover:text-cyan-800"
               onClick={() => {
                 setText(ex);
                 void submit(ex);
@@ -120,7 +120,7 @@ export function Dashboard() {
           ))}
           <button
             type="button"
-            className="ml-auto text-xs font-medium text-emerald-700 hover:underline"
+            className="ml-auto text-xs font-medium text-cyan-700 hover:underline"
             onClick={() => {
               setSaved(null);
               setMode({ kind: 'manual', text: '', nonce: Date.now() });
@@ -131,23 +131,23 @@ export function Dashboard() {
         </div>
 
         {saved && (
-          <p className="mt-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+          <p className="mt-4 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
             Saved “{saved}”. All reports are updated. <Link className="underline" to="/journal">View journal</Link>
           </p>
         )}
 
         {mode.kind === 'preview' && (
-          <div className="mt-5 border-t border-slate-200 pt-5">
+          <div className="mt-5 border-t border-slate-400/25 pt-5">
             <EntryEditor
               key={mode.nonce}
               accounts={accounts}
               initial={{ ...mode.result, sourceText: mode.text }}
               banner={
                 <div className="space-y-2">
-                  <div className="rounded-md bg-sky-50 px-3 py-2 text-sm text-sky-900">
+                  <div className="rounded-xl bg-sky-50 px-3 py-2 text-sm text-sky-900">
                     {mode.result.source === 'ai' ? (
                       <>
-                        <span className="mr-1.5 rounded bg-violet-100 px-1.5 py-0.5 text-xs font-semibold text-violet-800">AI</span>
+                        <span className="mr-1.5 rounded-full bg-violet-400/25 px-2 py-0.5 text-xs font-semibold text-violet-800">AI</span>
                         Claude drafted this entry for {formatCents(mode.result.amount)}.
                       </>
                     ) : (
@@ -158,7 +158,7 @@ export function Dashboard() {
                     Check the entry below — you can change the date, accounts or amounts before saving.
                   </div>
                   {mode.result.notes && (
-                    <div className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                    <div className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
                       <strong>Assumed:</strong> {mode.result.notes}
                     </div>
                   )}
@@ -179,14 +179,14 @@ export function Dashboard() {
         )}
 
         {mode.kind === 'manual' && (
-          <div className="mt-5 border-t border-slate-200 pt-5">
+          <div className="mt-5 border-t border-slate-400/25 pt-5">
             <EntryEditor
               key={mode.nonce}
               accounts={accounts}
               initial={{ date: todayISO(), description: mode.text, lines: blankLines(), sourceText: mode.text || undefined }}
               banner={
                 mode.reason ? (
-                  <div className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                  <div className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
                     <strong>Couldn't create this entry automatically.</strong> {mode.reason}
                     {mode.candidates && <> Possible matches: {mode.candidates.join(', ')}.</>} Enter the debits and credits below.
                     {!aiEnabled && !mode.fromAi && (
@@ -227,22 +227,22 @@ export function Dashboard() {
       </div>
 
       <Card>
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+        <div className="flex items-center justify-between border-b border-slate-400/25 px-5 py-3">
           <h2 className="font-medium text-slate-900">Recent entries</h2>
-          <Link to="/journal" className="text-sm text-emerald-700 hover:underline">
+          <Link to="/journal" className="text-sm text-cyan-700 hover:underline">
             All entries →
           </Link>
         </div>
         {recent.length === 0 ? (
           <div className="p-6 text-center text-sm text-slate-500">
-            No entries yet. Type a transaction above, enter <Link className="text-emerald-700 underline" to="/opening-balances">opening balances</Link>, or{' '}
-            <button type="button" className="text-emerald-700 underline" onClick={loadSample}>
+            No entries yet. Type a transaction above, enter <Link className="text-cyan-700 underline" to="/opening-balances">opening balances</Link>, or{' '}
+            <button type="button" className="text-cyan-700 underline" onClick={loadSample}>
               load sample data
             </button>
             .
           </div>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-slate-400/15">
             {recent.map((e) => (
               <li key={e.id} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-5 py-3 text-sm">
                 <span className="w-10 font-mono text-xs text-slate-400">{entryNumberLabel(e)}</span>

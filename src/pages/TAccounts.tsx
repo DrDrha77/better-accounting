@@ -38,7 +38,7 @@ export function TAccounts() {
             <AccountSelect accounts={accounts} value={accountId} onChange={setAccountId} />
           </Field>
           {accountId && (
-            <button type="button" className="pb-2 text-sm text-emerald-700 hover:underline" onClick={() => setAccountId('')}>
+            <button type="button" className="pb-2 text-sm text-cyan-700 hover:underline" onClick={() => setAccountId('')}>
               Show all
             </button>
           )}
@@ -76,7 +76,7 @@ function Side({ items }: { items: TItem[] }) {
 
 function TChart({ t }: { t: TAccount }) {
   return (
-    <div className="break-inside-avoid rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="glass pop-in break-inside-avoid rounded-[1.75rem] p-5">
       <div className="border-b-2 border-slate-800 pb-1 text-center font-medium text-slate-900">
         {t.account.name}
         <span className="ml-1 text-xs font-normal text-slate-400">#{t.account.number}</span>
@@ -91,12 +91,12 @@ function TChart({ t }: { t: TAccount }) {
           <Side items={t.credits} />
         </div>
       </div>
-      <div className="grid grid-cols-2 border-t border-slate-300 text-sm font-medium">
+      <div className="grid grid-cols-2 border-t border-slate-400/40 text-sm font-medium">
         <div className="border-r-2 border-slate-800 px-2 py-1 text-right tabular-nums">{formatPlain(t.totalDebit)}</div>
         <div className="px-2 py-1 text-right tabular-nums">{formatPlain(t.totalCredit)}</div>
       </div>
       <div className={`mt-1 text-sm ${t.balanceSide === 'debit' ? 'text-left' : 'text-right'}`}>
-        <span className="rounded bg-slate-100 px-2 py-0.5 font-semibold tabular-nums">
+        <span className="rounded bg-slate-400/15 px-2 py-0.5 font-semibold tabular-nums">
           Bal. {formatCents(t.balance)} {t.balanceSide === 'debit' ? 'Dr' : 'Cr'}
         </span>
       </div>
