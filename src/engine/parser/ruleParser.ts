@@ -87,6 +87,7 @@ export function parseWithRules(text: string, ctx: ParseContext, templates: Trans
 
   return {
     status: 'matched',
+    source: 'rules',
     templateId: template.id,
     templateLabel: template.label,
     date: date ?? ctx.today,

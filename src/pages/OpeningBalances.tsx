@@ -87,14 +87,14 @@ export function OpeningBalances() {
           {existing && (
             <p className="text-sm text-slate-500">
               Currently posted as of {fmtDate(existing.date)}.{' '}
-              <Link to="/opening-statement" className="text-emerald-700 hover:underline">
+              <Link to="/opening-statement" className="text-cyan-700 hover:underline">
                 View opening statement
               </Link>
             </p>
           )}
         </div>
         {earlier.length > 0 && (
-          <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
             {earlier.length} existing {earlier.length === 1 ? 'entry is' : 'entries are'} dated before {fmtDate(date)}. Opening balances usually come
             before all other transactions.
           </p>
@@ -122,7 +122,7 @@ export function OpeningBalances() {
                   {list.map((a) => {
                     const r = rows[a.id] ?? { amount: '', side: normalSide(a) };
                     return (
-                      <tr key={a.id} className="border-t border-slate-100">
+                      <tr key={a.id} className="border-t border-slate-400/15">
                         <td className="py-1 pr-2">
                           <span className="mr-2 text-slate-400">{a.number}</span>
                           {a.name}
@@ -157,7 +157,7 @@ export function OpeningBalances() {
           </table>
         </div>
 
-        <div className="sticky bottom-0 -mx-5 mt-4 border-t border-slate-200 bg-white/95 px-5 py-4 backdrop-blur">
+        <div className="glass-strong sticky bottom-3 -mx-2 mt-4 rounded-[1.5rem] px-5 py-4">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
             <span>
               Debits <strong className="tabular-nums">{formatCents(totals.debit)}</strong>
@@ -165,7 +165,7 @@ export function OpeningBalances() {
             <span>
               Credits <strong className="tabular-nums">{formatCents(totals.credit)}</strong>
             </span>
-            <span className={cx('font-medium', totals.difference === 0 ? 'text-emerald-700' : 'text-red-700')}>
+            <span className={cx('font-medium', totals.difference === 0 ? 'text-cyan-700' : 'text-red-700')}>
               {totals.difference === 0
                 ? 'Balanced ✓'
                 : `Difference ${formatCents(Math.abs(totals.difference))} (${totals.difference > 0 ? 'debits' : 'credits'} higher)`}
@@ -197,7 +197,7 @@ export function OpeningBalances() {
           </div>
           <div className="mt-2 space-y-2">
             <ErrorList errors={[...badAmounts, ...errors]} />
-            {message && <p className="text-sm text-emerald-700">{message}</p>}
+            {message && <p className="text-sm text-cyan-700">{message}</p>}
           </div>
         </div>
       </Card>

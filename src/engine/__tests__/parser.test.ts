@@ -80,3 +80,36 @@ describe('rule-based parser', () => {
     expect(r.status).toBe('matched');
   });
 });
+
+describe('rule-based parser: everyday phrasings', () => {
+  it.each([
+    ['Bought a car for $50000', K.vehicles, K.cash, 5_000_000],
+    ['Purchased a delivery truck for 32,500', K.vehicles, K.cash, 3_250_000],
+    ['Bought a van on credit for 18000', K.vehicles, K.accountsPayable, 1_800_000],
+    ['Bought a car for 50k with a loan', K.vehicles, K.notesPayable, 5_000_000],
+    ['Financed a new truck for 40000', K.vehicles, K.notesPayable, 4_000_000],
+    ['Got a new laptop for 1,200', K.equipment, K.cash, 120_000],
+    ['Bought office chairs for 600', K.furniture, K.cash, 60_000],
+    ['Paid 300 to fix the truck', K.repairsExpense, K.cash, 30_000],
+    ['Spent 250 on Facebook ads', K.advertisingExpense, K.cash, 25_000],
+    ['Paid 80 for gas for the van', K.travelExpense, K.cash, 8_000],
+    ['Paid 150 interest on the loan', K.interestExpense, K.cash, 15_000],
+    ['Paid 25 in bank fees', K.miscExpense, K.cash, 2_500],
+    ['Received a 400 advertising bill to pay later', K.advertisingExpense, K.accountsPayable, 40_000],
+    ['Paid the electric bill 120', K.utilitiesExpense, K.cash, 12_000],
+    ['Received 800 for consulting services', K.cash, K.serviceRevenue, 80_000],
+    ['Client paid 500 for the job', K.cash, K.serviceRevenue, 50_000],
+    ['Billed a client 2500 for services', K.accountsReceivable, K.serviceRevenue, 250_000],
+    ['Customer paid the 700 they owed', K.cash, K.accountsReceivable, 70_000],
+    ['Took out a 20,000 loan from the bank', K.cash, K.notesPayable, 2_000_000],
+    ['Paid 900 owed to a supplier', K.accountsPayable, K.cash, 90_000],
+  ])('%s', (text, dr, cr, cents) => {
+    expectEntry(text, dr, cr, cents);
+  });
+
+  it('still refuses to guess on genuinely unclear sentences', () => {
+    for (const text of ['Sold the old truck for 5000', 'Owner contributed a truck worth 20000', 'Paid for supplies and rent 900']) {
+      expect(parseWithRules(text, ctx).status, text).toBe('unmatched');
+    }
+  });
+});

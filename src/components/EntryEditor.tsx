@@ -139,7 +139,7 @@ export function EntryEditor({
                   <button
                     type="button"
                     aria-label={`Remove line ${i + 1}`}
-                    className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600 disabled:opacity-30"
+                    className="rounded p-1 text-slate-400 hover:bg-slate-400/15 hover:text-red-600 disabled:opacity-30"
                     disabled={lines.length <= 2}
                     onClick={() => {
                       setTouched(true);
@@ -153,7 +153,7 @@ export function EntryEditor({
             ))}
           </tbody>
           <tfoot>
-            <tr className="border-t border-slate-200 font-medium">
+            <tr className="border-t border-slate-400/25 font-medium">
               <td className="pt-2">
                 <Button variant="ghost" className="-ml-2" onClick={() => setLines((ls) => [...ls, toEditorLine()])}>
                   + Add line
@@ -168,7 +168,7 @@ export function EntryEditor({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className={cx('text-sm font-medium', diff === 0 && parsed.totals.debit > 0 ? 'text-emerald-700' : 'text-amber-700')}>
+        <span className={cx('text-sm font-medium', diff === 0 && parsed.totals.debit > 0 ? 'text-cyan-700' : 'text-amber-700')}>
           {diff === 0
             ? parsed.totals.debit > 0
               ? 'Balanced ✓'

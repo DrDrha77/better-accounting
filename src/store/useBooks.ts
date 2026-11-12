@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { withMissingDefaults } from '../engine/accounts';
 import * as ops from '../engine/books';
 import type { OpeningBalanceInput } from '../engine/opening';
 import { buildSampleBooks } from '../engine/sample';
@@ -48,9 +49,14 @@ export const useBooks = create<BooksState>()(
     },
     {
       name: 'better-accounting:books',
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => pickBooks(s),
+      // v2 added default accounts (Vehicles, Furniture, Advertising, …); give saved books the ones they lack.
+      migrate: (persisted) => {
+        const books = persisted as Books;
+        return { ...books, accounts: withMissingDefaults(books.accounts ?? []) } as BooksState;
+      },
     },
   ),
 );

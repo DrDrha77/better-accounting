@@ -2,18 +2,163 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ------------------------------------------------------------------
+   Liquid glass theme — "deep ocean"
+   Light: sunlit shallows. Dark: deep water. Panels are frosted glass.
+   ------------------------------------------------------------------ */
+
+:root {
+  color-scheme: light;
+  --ocean-1: #e0f7ff;
+  --ocean-2: #c7ecf7;
+  --ocean-3: #b9e4f2;
+  --blob-a: rgba(34, 211, 238, 0.45);
+  --blob-b: rgba(59, 130, 246, 0.35);
+  --blob-c: rgba(45, 212, 191, 0.4);
+
+  --glass-bg: rgba(255, 255, 255, 0.52);
+  --glass-bg-strong: rgba(255, 255, 255, 0.72);
+  --glass-inset: rgba(255, 255, 255, 0.38);
+  --glass-border: rgba(255, 255, 255, 0.75);
+  --glass-edge: rgba(15, 60, 90, 0.08);
+  --glass-shine: rgba(255, 255, 255, 0.9);
+  --glass-shadow: 0 10px 40px -12px rgba(8, 47, 73, 0.28), 0 2px 8px -2px rgba(8, 47, 73, 0.08);
+
+  --bubble-from: #22d3ee;
+  --bubble-to: #2563eb;
+  --bubble-glow: rgba(34, 211, 238, 0.45);
+  --bubble-ring: rgba(255, 255, 255, 0.55);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --ocean-1: #020b1a;
+  --ocean-2: #03172e;
+  --ocean-3: #052a43;
+  --blob-a: rgba(6, 182, 212, 0.32);
+  --blob-b: rgba(37, 99, 235, 0.3);
+  --blob-c: rgba(20, 184, 166, 0.26);
+
+  --glass-bg: rgba(14, 38, 66, 0.45);
+  --glass-bg-strong: rgba(12, 32, 56, 0.72);
+  --glass-inset: rgba(148, 210, 255, 0.07);
+  --glass-border: rgba(148, 210, 255, 0.16);
+  --glass-edge: rgba(0, 0, 0, 0.35);
+  --glass-shine: rgba(186, 230, 253, 0.22);
+  --glass-shadow: 0 16px 50px -12px rgba(0, 0, 0, 0.65), 0 2px 10px -2px rgba(0, 0, 0, 0.4);
+
+  --bubble-from: #22d3ee;
+  --bubble-to: #3b82f6;
+  --bubble-glow: rgba(34, 211, 238, 0.35);
+  --bubble-ring: rgba(186, 230, 253, 0.35);
+}
+
 html {
   -webkit-font-smoothing: antialiased;
 }
 
+body {
+  background: linear-gradient(170deg, var(--ocean-1) 0%, var(--ocean-2) 45%, var(--ocean-3) 100%) fixed;
+  @apply text-slate-900;
+}
+
+/* Drifting light blobs behind the glass */
+.ocean {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ocean .blob {
+  position: absolute;
+  width: 55vmax;
+  height: 55vmax;
+  border-radius: 50%;
+  filter: blur(70px);
+  animation: drift 26s ease-in-out infinite alternate;
+}
+.ocean .blob.a { background: var(--blob-a); top: -20vmax; left: -15vmax; }
+.ocean .blob.b { background: var(--blob-b); bottom: -25vmax; right: -15vmax; animation-duration: 32s; animation-delay: -8s; }
+.ocean .blob.c { background: var(--blob-c); top: 30%; left: 35%; width: 40vmax; height: 40vmax; animation-duration: 38s; animation-delay: -16s; }
+
+/* A few soft bubbles rising */
+.ocean .bubble {
+  position: absolute;
+  bottom: -60px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--glass-shine), transparent 60%), var(--glass-inset);
+  border: 1px solid var(--bubble-ring);
+  animation: rise linear infinite;
+  opacity: 0.55;
+}
+
+@keyframes drift {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(6vmax, 4vmax) scale(1.08); }
+  100% { transform: translate(-4vmax, 7vmax) scale(0.95); }
+}
+@keyframes rise {
+  0% { transform: translate(0, 0); opacity: 0; }
+  10% { opacity: 0.55; }
+  50% { transform: translate(18px, -55vh); }
+  100% { transform: translate(-12px, -115vh); opacity: 0; }
+}
+@keyframes pop-in {
+  0% { opacity: 0; transform: translateY(8px) scale(0.98); }
+  100% { opacity: 1; transform: none; }
+}
+
+@layer components {
+  /* Frosted glass panel with a specular top edge */
+  .glass {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter: blur(22px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 var(--glass-shine), inset 0 -1px 0 var(--glass-edge), var(--glass-shadow);
+  }
+  .glass-strong {
+    background: var(--glass-bg-strong);
+    -webkit-backdrop-filter: blur(26px) saturate(190%);
+    backdrop-filter: blur(26px) saturate(190%);
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 var(--glass-shine), var(--glass-shadow);
+  }
+  /* Recessed glass for inputs and inner wells */
+  .glass-inset {
+    background: var(--glass-inset);
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 3px var(--glass-edge);
+  }
+  /* The glossy aqua bubble used for primary actions and active items */
+  .bubble-active {
+    background:
+      radial-gradient(120% 90% at 30% 0%, rgba(255, 255, 255, 0.55), transparent 55%),
+      linear-gradient(135deg, var(--bubble-from), var(--bubble-to));
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6), inset 0 -2px 6px rgba(0, 0, 0, 0.15), 0 6px 20px -6px var(--bubble-glow);
+  }
+  .pop-in {
+    animation: pop-in 0.45s cubic-bezier(.34,1.56,.64,1) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ocean .blob, .ocean .bubble, .pop-in { animation: none !important; }
+  .ocean .bubble { display: none; }
+}
+
 @media print {
-  @page {
-    margin: 1.5cm;
-  }
-  body {
+  @page { margin: 1.5cm; }
+  :root { color-scheme: light; }
+  body { background: white !important; }
+  .ocean { display: none; }
+  .glass, .glass-strong, .glass-inset {
     background: white !important;
+    box-shadow: none !important;
+    border-color: #e2e8f0 !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
   }
-  .overflow-x-auto {
-    overflow: visible !important;
-  }
+  .overflow-x-auto { overflow: visible !important; }
 }

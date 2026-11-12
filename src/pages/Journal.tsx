@@ -29,7 +29,7 @@ export function Journal() {
       ) : (
         <Card className="overflow-x-auto">
           <table className="w-full min-w-[40rem] text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <thead className="bg-slate-400/10 text-left text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-4 py-2 font-medium">#</th>
                 <th className="px-4 py-2 font-medium">Date</th>
@@ -43,7 +43,7 @@ export function Journal() {
               {sorted.map((e) => (
                 <Fragment key={e.id}>
                   {e.lines.map((l, i) => (
-                    <tr key={i} className={i === 0 ? 'border-t border-slate-200' : ''}>
+                    <tr key={i} className={i === 0 ? 'border-t border-slate-400/25' : ''}>
                       <td className="px-4 pt-2 align-top font-mono text-xs text-slate-400">{i === 0 && entryNumberLabel(e)}</td>
                       <td className="whitespace-nowrap px-4 pt-2 align-top text-slate-600">{i === 0 && fmtDate(e.date)}</td>
                       <td className={l.credit ? 'px-4 pl-12 pt-1' : 'px-4 pt-1'}>{name(l.accountId)}</td>
@@ -52,12 +52,12 @@ export function Journal() {
                       <td className="px-4 pt-1 text-right align-top print:hidden">
                         {i === 0 &&
                           (e.kind === 'opening' ? (
-                            <Link to="/opening-balances" className="text-xs text-emerald-700 hover:underline">
+                            <Link to="/opening-balances" className="text-xs text-cyan-700 hover:underline">
                               Edit
                             </Link>
                           ) : (
                             <span className="whitespace-nowrap">
-                              <button type="button" className="text-xs text-emerald-700 hover:underline" onClick={() => setEditing(e.id)}>
+                              <button type="button" className="text-xs text-cyan-700 hover:underline" onClick={() => setEditing(e.id)}>
                                 Edit
                               </button>
                               <button
@@ -85,7 +85,7 @@ export function Journal() {
                   </tr>
                   {editing === e.id && (
                     <tr className="print:hidden">
-                      <td colSpan={6} className="bg-slate-50 px-4 py-4">
+                      <td colSpan={6} className="bg-slate-400/10 px-4 py-4">
                         <EntryEditor
                           accounts={accounts}
                           initial={e}

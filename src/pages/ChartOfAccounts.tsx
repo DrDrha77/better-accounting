@@ -87,9 +87,9 @@ export function ChartOfAccounts() {
           const list = sortAccounts(accounts.filter((a) => a.type === t));
           return (
             <Card key={t} className="overflow-x-auto break-inside-avoid">
-              <div className="border-b border-slate-200 px-4 py-2.5 font-medium text-slate-900">{TYPE_LABELS[t]}s</div>
+              <div className="border-b border-slate-400/25 px-4 py-2.5 font-medium text-slate-900">{TYPE_LABELS[t]}s</div>
               <table className="w-full min-w-[32rem] text-sm">
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-400/15">
                   {list.map((a) => (
                     <AccountRow
                       key={a.id}
@@ -151,7 +151,7 @@ function AccountRow({ account: a, balance, used, editing, onEdit, onSave, onDele
         ) : (
           <>
             {a.name}
-            {a.contra && <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500">contra</span>}
+            {a.contra && <span className="ml-2 rounded bg-slate-400/15 px-1.5 py-0.5 text-xs text-slate-500">contra</span>}
           </>
         )}
       </td>
@@ -160,7 +160,7 @@ function AccountRow({ account: a, balance, used, editing, onEdit, onSave, onDele
       <td className="w-36 whitespace-nowrap px-4 py-2 text-right print:hidden">
         {editing === null && (
           <>
-            <button type="button" className="text-xs text-emerald-700 hover:underline" onClick={() => onEdit(a.name)}>
+            <button type="button" className="text-xs text-cyan-700 hover:underline" onClick={() => onEdit(a.name)}>
               Rename
             </button>
             <button

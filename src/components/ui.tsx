@@ -5,18 +5,21 @@ import { cx } from './format';
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
 
+/** Pill-shaped "bubble" buttons with a springy press. */
 export function Button({ variant = 'secondary', className, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
   const styles: Record<Variant, string> = {
-    primary: 'bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-300',
-    secondary: 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 disabled:text-slate-400',
-    danger: 'bg-white text-red-700 border border-red-200 hover:bg-red-50 disabled:text-red-300',
-    ghost: 'text-slate-600 hover:bg-slate-100 disabled:text-slate-300',
+    primary: 'bubble-active text-white hover:brightness-110 disabled:opacity-45 disabled:saturate-50',
+    secondary: 'glass-inset text-slate-700 hover:bg-white/40 disabled:text-slate-400',
+    danger: 'glass-inset text-red-600 hover:bg-red-500/10 disabled:text-red-300',
+    ghost: 'text-slate-600 hover:bg-slate-500/10 disabled:text-slate-300',
   };
   return (
     <button
       type="button"
       className={cx(
-        'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed',
+        'inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-300 ease-bubble',
+        'hover:scale-[1.04] active:scale-95 disabled:cursor-not-allowed disabled:hover:scale-100',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70',
         styles[variant],
         className,
       )}
@@ -26,14 +29,14 @@ export function Button({ variant = 'secondary', className, ...props }: ButtonHTM
 }
 
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cx('rounded-lg border border-slate-200 bg-white shadow-sm print:border-0 print:shadow-none', className)}>{children}</div>;
+  return <div className={cx('glass pop-in rounded-[1.75rem] print:rounded-none', className)}>{children}</div>;
 }
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">{title}</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2 print:hidden">{actions}</div>}
@@ -45,8 +48,8 @@ export function StatusBadge({ ok, okText, badText }: { ok: boolean; okText: stri
   return (
     <span
       className={cx(
-        'inline-flex items-center rounded-full px-3 py-1 text-sm font-medium',
-        ok ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' : 'bg-red-50 text-red-700 ring-1 ring-red-200',
+        'inline-flex items-center rounded-full px-3.5 py-1 text-sm font-semibold backdrop-blur',
+        ok ? 'bg-emerald-400/20 text-emerald-700 ring-1 ring-emerald-400/50' : 'bg-red-400/20 text-red-700 ring-1 ring-red-400/50',
       )}
     >
       {ok ? okText : badText}
@@ -64,7 +67,7 @@ export function Field({ label, children, className }: { label: string; children:
 }
 
 export const inputClass =
-  'w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500';
+  'glass-inset w-full rounded-xl px-3 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:outline-none focus:ring-2 focus:ring-cyan-400/60 [&>optgroup]:bg-slate-50 [&>option]:bg-slate-50';
 
 export function AccountSelect({
   accounts,
@@ -101,13 +104,13 @@ export function AccountSelect({
 }
 
 export function EmptyState({ children }: { children: ReactNode }) {
-  return <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">{children}</div>;
+  return <div className="glass-inset rounded-[1.75rem] border-dashed p-8 text-center text-sm text-slate-500">{children}</div>;
 }
 
 export function ErrorList({ errors }: { errors: string[] }) {
   if (!errors.length) return null;
   return (
-    <ul className="space-y-0.5 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+    <ul className="space-y-0.5 rounded-2xl bg-red-400/15 px-4 py-2 text-sm text-red-700 ring-1 ring-red-400/30">
       {errors.map((e) => (
         <li key={e}>{e}</li>
       ))}

@@ -2,7 +2,7 @@
 
 Type business transactions in plain English ("Owner invested $40,000 into the business") and get a balanced double-entry journal entry. Every record (journal, general ledger, T-accounts, trial balance, income statement, balance sheet, statement of owner's equity, opening statement) is derived live from the journal.
 
-No backend: data is kept in your browser's localStorage.
+No backend: data is kept in your browser's localStorage. The look is "liquid glass" over a deep-ocean background, with light and dark themes (switch in the sidebar or Settings; defaults to your device).
 
 ## Run it
 
@@ -46,9 +46,9 @@ src/
   pages/             one file per screen
 ```
 
-## The parser
+## Recognizing transactions
 
-`RuleBasedParser` (in `src/engine/parser/ruleParser.ts`) implements the `TransactionParser` interface:
+Typing a sentence goes through two recognizers (`src/engine/parser/`), both behind the same `TransactionParser` interface:
 
 ```ts
 interface TransactionParser {
@@ -56,25 +56,36 @@ interface TransactionParser {
 }
 ```
 
-It finds a single amount (`40000`, `$40,000`, `1,200.50`, `10k`) and an optional date (`2026-03-15`, `3/15`, `yesterday`), then scores each template. If there's no amount, more than one amount, no match, or a tie between templates, it returns `unmatched` and the app opens the manual entry form. It never guesses. A matched result is still only a proposal: the user confirms or edits it before it is saved.
+**1. Built-in rules** (`ruleParser.ts`, instant and free). It finds a single amount (`40000`, `$40,000`, `1,200.50`, `50k`) and an optional date (`2026-03-15`, `3/15`, `yesterday`), then scores the templates in `templates.ts`. It covers owner investments and withdrawals; buying equipment, vehicles, furniture or supplies for cash, on credit or with a loan; paying or accruing rent, wages, utilities, advertising, repairs, travel, interest and bank fees; earning, billing and collecting revenue; customer deposits; and borrowing and repaying loans. If there's no amount, more than one amount, no match, or a tie, it gives up rather than guessing.
 
-To plug in an LLM later, write another class that implements `TransactionParser` and swap it in at the top of `src/pages/Dashboard.tsx`.
+**2. AI** (optional). In **Settings**, choose a provider and paste your own API key:
 
-### Adding a transaction type
+| Provider | Model | Notes |
+|---|---|---|
+| Google Gemini (`geminiParser.ts`) | `gemini-3.8-flash` | Free tier available (Google AI Studio). Uses the Interactions API with `store: false`. |
+| Anthropic Claude (`claudeParser.ts`) | `claude-opus-5-5` | Paid per use. Server-side refusal fallback enabled. |
 
-Add an object to `TEMPLATES` in `src/engine/parser/templates.ts`:
+The AI handles sentences the rules can't, such as multi-line entries ("paid 5,000 cash and financed the rest"), written-out numbers, and unusual wording. Both providers share one prompt, JSON schema and validator (`aiShared.ts`). The model gets the sentence, today's date and the chart of accounts (names and numbers only), and its answer is checked before you see it: real accounts only, amounts parsed to cents, debits = credits. Assumptions it made (for example "assumed cash") are shown above the preview. Modes: *when the rules can't tell* (default), *always*, or *off*. `hybridParser.ts` combines rules and AI.
+
+Keys are stored only in that browser's localStorage and sent only to the chosen provider; there is no backend. Each provider's SDK is loaded lazily, the first time the AI runs. To add another provider, implement `TransactionParser` using the helpers in `aiShared.ts` and add it to `lazyAiParser` and `PROVIDERS`.
+
+Every proposal, from rules or AI, is shown as an editable preview and nothing is saved until you confirm it.
+
+### Adding a transaction type to the rules
+
+For a new asset or expense category, add it to `ASSETS` or `EXPENSES` in `templates.ts` and call `purchaseTemplates(...)` / `expenseTemplates(...)`, which generate the cash, on-credit and loan (or pay-later) variants. For anything else, add an object to `TEMPLATES`:
 
 ```ts
 {
-  id: 'pay-advertising',
-  label: 'Pay advertising',
-  example: 'Paid 300 for advertising',
-  match: [/\b(paid|pays?)\b/, /\badvertis(ing|ement)\b/], // all must match
-  boost: [/\bcash\b/],                                      // optional, raises the score
-  exclude: [/\bon account\b/],                              // optional, disqualifies
-  debit: 'advertising_expense',                             // account systemKey
-  credit: 'cash',
+  id: 'owner-investment',
+  label: 'Owner investment',
+  example: 'Owner invested 40000 into the business',
+  match: [/\b(invest(ed|s)?|contribut(ed|ion))\b/], // all must match
+  boost: [/\bowner\b/],                              // optional, raises the score
+  exclude: [/\bwithdr/],                             // optional, disqualifies
+  debit: 'cash',                                     // account systemKey
+  credit: 'capital',
 }
 ```
 
-`debit`/`credit` refer to an account's `systemKey`, so renaming accounts doesn't break templates. A new key needs a matching account in `DEFAULT_ACCOUNTS` (`src/engine/accounts.ts`). The test suite checks that every template parses its own `example`.
+`debit`/`credit` refer to an account's `systemKey`, so renaming accounts doesn't break templates. A new key needs a matching account in `DEFAULT_ACCOUNTS` (`src/engine/accounts.ts`); saved books pick up new default accounts automatically on load. The test suite checks that every template parses its own `example`.
