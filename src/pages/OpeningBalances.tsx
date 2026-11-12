@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { AddAccountInline } from '../components/AddAccountInline';
 import { Link } from 'react-router-dom';
 import { cx, fmtDate, formatCents, formatPlain } from '../components/format';
 import { Button, Card, ErrorList, Field, inputClass, PageHeader } from '../components/ui';
@@ -20,6 +21,12 @@ function initialRows(accounts: Account[], input?: OpeningBalanceInput): Record<s
   for (const l of input?.lines ?? []) rows[l.accountId] = { amount: formatPlain(l.amount), side: l.side };
   return rows;
 }
+
+/** Plain-language hints for accounting jargon. */
+const HINTS: Record<string, string> = {
+  [SYSTEM_KEYS.notesPayable]: 'bank loans and other borrowed money',
+  [SYSTEM_KEYS.openingBalanceEquity]: 'balancing figure; see the button below',
+};
 
 export function OpeningBalances() {
   const { accounts, entries, saveOpening, removeOpening } = useBooks();
@@ -52,7 +59,11 @@ export function OpeningBalances() {
 
   const setRow = (id: string, patch: Partial<Row>) => {
     setMessage(null);
-    setRows((rs) => ({ ...rs, [id]: { ...rs[id], ...patch } }));
+    setRows((rs) => {
+      const acct = accounts.find((a) => a.id === id);
+      const base = rs[id] ?? { amount: '', side: acct ? normalSide(acct) : 'debit' };
+      return { ...rs, [id]: { ...base, ...patch } };
+    });
   };
 
   /** Only the Opening Balance Equity row changes; every other row keeps exactly what the user typed. */
@@ -111,7 +122,6 @@ export function OpeningBalances() {
             </thead>
             {ACCOUNT_TYPES.map((t) => {
               const list = sortAccounts(accounts.filter((a) => a.type === t));
-              if (!list.length) return null;
               return (
                 <tbody key={t}>
                   <tr>
@@ -126,6 +136,7 @@ export function OpeningBalances() {
                         <td className="py-1 pr-2">
                           <span className="mr-2 text-slate-400">{a.number}</span>
                           {a.name}
+                          {a.systemKey && HINTS[a.systemKey] && <span className="block pl-[2.6rem] text-xs text-slate-500">{HINTS[a.systemKey]}</span>}
                         </td>
                         <td className="py-1 pr-2">
                           <select
@@ -141,6 +152,7 @@ export function OpeningBalances() {
                         <td className="py-1">
                           <input
                             aria-label={`${a.name} opening amount`}
+                            data-account-amount={a.id}
                             inputMode="decimal"
                             placeholder="0.00"
                             className={cx(inputClass, 'text-right tabular-nums')}
@@ -151,6 +163,17 @@ export function OpeningBalances() {
                       </tr>
                     );
                   })}
+                  <tr>
+                    <td colSpan={3} className="pb-2 pt-1">
+                      <AddAccountInline
+                        type={t}
+                        onAdded={(acct) =>
+                          // Wait a tick for the new row to render, then jump to its amount box.
+                          setTimeout(() => document.querySelector<HTMLInputElement>(`[data-account-amount="${acct.id}"]`)?.focus(), 50)
+                        }
+                      />
+                    </td>
+                  </tr>
                 </tbody>
               );
             })}
