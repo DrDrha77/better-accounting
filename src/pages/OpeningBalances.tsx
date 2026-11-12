@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { AddAccountInline } from '../components/AddAccountInline';
 import { Link } from 'react-router-dom';
 import { cx, fmtDate, formatCents, formatPlain } from '../components/format';
 import { Button, Card, ErrorList, Field, inputClass, PageHeader } from '../components/ui';
@@ -21,8 +22,14 @@ function initialRows(accounts: Account[], input?: OpeningBalanceInput): Record<s
   return rows;
 }
 
+/** Plain-language hints for accounting jargon. */
+const HINTS: Record<string, string> = {
+  [SYSTEM_KEYS.notesPayable]: 'bank loans and other borrowed money',
+  [SYSTEM_KEYS.openingBalanceEquity]: 'balancing figure; see the button below',
+};
+
 export function OpeningBalances() {
-  const { accounts, entries, saveOpening, removeOpening } = useBooks();
+  const { accounts, entries, saveOpening, removeOpening, deleteAccount } = useBooks();
   const existing = entries.find((e) => e.kind === 'opening');
   const existingInput = existing ? entryToOpeningInput(existing) : undefined;
 
@@ -52,7 +59,11 @@ export function OpeningBalances() {
 
   const setRow = (id: string, patch: Partial<Row>) => {
     setMessage(null);
-    setRows((rs) => ({ ...rs, [id]: { ...rs[id], ...patch } }));
+    setRows((rs) => {
+      const acct = accounts.find((a) => a.id === id);
+      const base = rs[id] ?? { amount: '', side: acct ? normalSide(acct) : 'debit' };
+      return { ...rs, [id]: { ...base, ...patch } };
+    });
   };
 
   /** Only the Opening Balance Equity row changes; every other row keeps exactly what the user typed. */
@@ -62,6 +73,27 @@ export function OpeningBalances() {
     if (!obe) return;
     const line = plugToOpeningBalanceEquity(input, accounts).lines.find((l) => l.accountId === obe.id);
     setRow(obe.id, line ? { amount: formatPlain(line.amount), side: line.side } : { amount: '', side: normalSide(obe) });
+  };
+
+  /** Why an account can't be removed here, or null if it can. */
+  const removeBlocked = (a: Account): string | null => {
+    if (a.systemKey === SYSTEM_KEYS.openingBalanceEquity) return 'Needed to balance opening balances';
+    const used = entries.filter((e) => e.lines.some((l) => l.accountId === a.id));
+    if (used.some((e) => e.kind !== 'opening')) return 'Has journal entries, so it can’t be removed';
+    if (used.length) return 'Has a saved opening balance. Clear its amount and save first';
+    return null;
+  };
+
+  const remove = (a: Account) => {
+    if (!window.confirm(`Remove the account “${a.name}”?`)) return;
+    const r = deleteAccount(a.id);
+    if (!r.ok) {
+      setErrors(r.errors);
+      return;
+    }
+    setRows(({ [a.id]: _removed, ...rest }) => rest);
+    setErrors([]);
+    setMessage(`Removed “${a.name}”.`);
   };
 
   const save = () => {
@@ -107,15 +139,17 @@ export function OpeningBalances() {
                 <th className="py-2 font-medium">Account</th>
                 <th className="w-28 py-2 font-medium">Side</th>
                 <th className="w-40 py-2 text-right font-medium">Amount</th>
+                <th className="w-10 py-2">
+                  <span className="sr-only">Remove</span>
+                </th>
               </tr>
             </thead>
             {ACCOUNT_TYPES.map((t) => {
               const list = sortAccounts(accounts.filter((a) => a.type === t));
-              if (!list.length) return null;
               return (
                 <tbody key={t}>
                   <tr>
-                    <td colSpan={3} className="pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    <td colSpan={4} className="pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
                       {TYPE_LABELS[t]}
                     </td>
                   </tr>
@@ -126,6 +160,7 @@ export function OpeningBalances() {
                         <td className="py-1 pr-2">
                           <span className="mr-2 text-slate-400">{a.number}</span>
                           {a.name}
+                          {a.systemKey && HINTS[a.systemKey] && <span className="block pl-[2.6rem] text-xs text-slate-500">{HINTS[a.systemKey]}</span>}
                         </td>
                         <td className="py-1 pr-2">
                           <select
@@ -141,6 +176,7 @@ export function OpeningBalances() {
                         <td className="py-1">
                           <input
                             aria-label={`${a.name} opening amount`}
+                            data-account-amount={a.id}
                             inputMode="decimal"
                             placeholder="0.00"
                             className={cx(inputClass, 'text-right tabular-nums')}
@@ -148,9 +184,37 @@ export function OpeningBalances() {
                             onChange={(e) => setRow(a.id, { amount: e.target.value })}
                           />
                         </td>
+                        <td className="py-1 pl-1 text-right">
+                          {(() => {
+                            const blocked = removeBlocked(a);
+                            return (
+                              <button
+                                type="button"
+                                aria-label={`Remove ${a.name}`}
+                                title={blocked ?? `Remove ${a.name}`}
+                                disabled={!!blocked}
+                                onClick={() => remove(a)}
+                                className="rounded-full p-1.5 text-slate-400 transition-all duration-300 ease-bubble hover:scale-110 hover:bg-red-500/10 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-25 disabled:hover:scale-100 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                              >
+                                ✕
+                              </button>
+                            );
+                          })()}
+                        </td>
                       </tr>
                     );
                   })}
+                  <tr>
+                    <td colSpan={4} className="pb-2 pt-1">
+                      <AddAccountInline
+                        type={t}
+                        onAdded={(acct) =>
+                          // Wait a tick for the new row to render, then jump to its amount box.
+                          setTimeout(() => document.querySelector<HTMLInputElement>(`[data-account-amount="${acct.id}"]`)?.focus(), 50)
+                        }
+                      />
+                    </td>
+                  </tr>
                 </tbody>
               );
             })}
@@ -182,7 +246,7 @@ export function OpeningBalances() {
                     }
                   }}
                 >
-                  Remove
+                  Remove opening entry
                 </Button>
               )}
               {totals.difference !== 0 && (
