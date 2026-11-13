@@ -11,6 +11,7 @@ import { centsToCsv } from '../engine/csv';
 import { entryNumberLabel, sortEntries } from '../engine/journal';
 import { filterEntries } from '../engine/ledger';
 import { useBooks } from '../store/useBooks';
+import { useSettings } from '../store/useSettings';
 
 /** Toolbar buttons are a bit larger, like the rest of the Journal page. */
 const TOOL = 'px-5 py-2.5 text-[15px]';
@@ -19,7 +20,8 @@ export function Journal() {
   const { accounts, entries, updateEntry, deleteEntry, clearJournal } = useBooks();
   const navigate = useNavigate();
   const [editing, setEditing] = useState<string | null>(null);
-  const [from, setFrom] = useState('');
+  const periodFrom = useSettings((s) => s.periodFrom);
+  const [from, setFrom] = useState(periodFrom);
   const [to, setTo] = useState('');
   const [showComposer, setShowComposer] = useState(true);
   const [blankDraft, setBlankDraft] = useState(0);
@@ -60,7 +62,7 @@ export function Journal() {
           <Button className={TOOL} onClick={() => setShowComposer((s) => !s)}>
             {showComposer ? 'Hide composer' : 'Show composer'}
           </Button>
-          <Button className={TOOL} onClick={() => navigate('/opening-balances')}>
+          <Button className={TOOL} onClick={() => navigate('/settings', { state: { scrollTo: 'opening-balances' } })}>
             Opening balances
           </Button>
           <Button
