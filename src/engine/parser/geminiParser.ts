@@ -13,6 +13,41 @@ import type { ParseContext, ParseResult, ScanImage, ScanOutcome, TransactionPars
 /** Gemini's current general-purpose model; has a free tier in Google AI Studio. */
 export const GEMINI_MODEL = 'gemini-3.8-flash';
 
+/**
+ * Tried in order when a model is overloaded (503/500) or out of free quota (429). All three are
+ * stable, read images, support JSON-schema output and have a free tier, each with its own quota.
+ */
+export const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite'] as const;
+
+export const GEMINI_MODEL_LABELS: Record<string, string> = {
+  'gemini-3.8-flash': 'Gemini 3.8 Flash',
+  'gemini-3.6-flash': 'Gemini 3.6 Flash',
+  'gemini-3.5-flash-lite': 'Gemini 3.5 Flash-Lite',
+};
+
+/** Busy or over quota: worth trying the next model. Bad key / bad request: not. */
+export function shouldTryNextModel(err: unknown): boolean {
+  const status = (err as { status?: number })?.status;
+  return status === 429 || (typeof status === 'number' && status >= 500);
+}
+
+/**
+ * Run a request on each model in turn until one isn't busy. Returns the response and the model
+ * that answered; rethrows the last error if every model fails (or the first non-busy error).
+ */
+export async function withModelFallback<T>(run: (model: string) => Promise<T>, models: readonly string[] = GEMINI_MODELS): Promise<{ res: T; model: string }> {
+  let lastErr: unknown;
+  for (const model of models) {
+    try {
+      return { res: await run(model), model };
+    } catch (err) {
+      lastErr = err;
+      if (!shouldTryNextModel(err)) throw err;
+    }
+  }
+  throw lastErr;
+}
+
 /** The slice of the GoogleGenAI client this parser uses (lets tests pass a fake). */
 export interface GeminiClientLike {
   interactions: {
@@ -31,9 +66,9 @@ export const GEMINI_RESPONSE_SCHEMA: Record<string, unknown> = (() => {
   return schema;
 })();
 
-export function buildGeminiRequest(text: string, ctx: ParseContext) {
+export function buildGeminiRequest(text: string, ctx: ParseContext, model: string = GEMINI_MODEL) {
   return {
-    model: GEMINI_MODEL,
+    model,
     system_instruction: SYSTEM_PROMPT,
     input: buildUserMessage(text, ctx),
     response_format: { type: 'text', mime_type: 'application/json', schema: GEMINI_RESPONSE_SCHEMA },
@@ -46,7 +81,12 @@ export function buildGeminiRequest(text: string, ctx: ParseContext) {
 
 async function defaultClient(apiKey: string, apiVersion?: string): Promise<GeminiClientLike> {
   const { GoogleGenAI } = await import('@google/genai');
-  return new GoogleGenAI({ apiKey, ...(apiVersion ? { apiVersion } : {}) }) as unknown as GeminiClientLike;
+  return new GoogleGenAI({
+    apiKey,
+    ...(apiVersion ? { apiVersion } : {}),
+    // One quick retry per model, then move on to the next model instead of waiting out a busy one.
+    httpOptions: { retryOptions: { attempts: 2 } },
+  }) as unknown as GeminiClientLike;
 }
 
 export class GeminiParser implements TransactionParser {
@@ -60,7 +100,8 @@ export class GeminiParser implements TransactionParser {
     if (!text.trim()) return { status: 'unmatched', source: 'ai', reason: 'Type a transaction to get started.' };
     try {
       this.client ??= await defaultClient(this.opts.apiKey);
-      const res = await this.client.interactions.create(buildGeminiRequest(text, ctx));
+      const client = this.client;
+      const { res } = await withModelFallback((model) => client.interactions.create(buildGeminiRequest(text, ctx, model)));
       if (res.status && res.status !== 'completed')
         return { status: 'unmatched', source: 'ai', reason: `Gemini didn't finish its answer (status: ${res.status}). Try again.` };
       const out = parseAiJson(res.output_text);
@@ -93,9 +134,9 @@ export const GEMINI_SCAN_SCHEMA: Record<string, unknown> = (() => {
   return schema;
 })();
 
-export function buildGeminiScanRequest(image: ScanImage, accounts: Account[], today: string) {
+export function buildGeminiScanRequest(image: ScanImage, accounts: Account[], today: string, model: string = GEMINI_MODEL) {
   return {
-    model: GEMINI_MODEL,
+    model,
     system_instruction: SCAN_PROMPT,
     input: [
       { type: 'text', text: buildScanText(accounts, today) },
@@ -112,11 +153,11 @@ export function buildGeminiScanRequest(image: ScanImage, accounts: Account[], to
 export async function scanWithGemini(apiKey: string, image: ScanImage, accounts: Account[], today: string, client?: GeminiClientLike): Promise<ScanOutcome> {
   try {
     const c = client ?? (await defaultClient(apiKey, GEMINI_SCAN_API_VERSION));
-    const res = await c.interactions.create(buildGeminiScanRequest(image, accounts, today));
+    const { res, model } = await withModelFallback((m) => c.interactions.create(buildGeminiScanRequest(image, accounts, today, m)));
     if (res.status && res.status !== 'completed') return { ok: false, reason: `Gemini didn't finish reading the page (status: ${res.status}). Try again.` };
     try {
       const parsed = ScanSchema.safeParse(JSON.parse(res.output_text ?? ''));
-      if (parsed.success) return { ok: true, scan: parsed.data };
+      if (parsed.success) return { ok: true, scan: parsed.data, model: GEMINI_MODEL_LABELS[model] ?? model };
     } catch {
       // fall through
     }

@@ -58,6 +58,7 @@ export function ScanPage() {
   const [startFresh, setStartFresh] = useState(false);
   const [useCompany, setUseCompany] = useState(true);
   const [done, setDone] = useState<string | null>(null);
+  const [readBy, setReadBy] = useState<string | null>(null);
 
   const hasBooks = entries.length > 0;
   const postable = useMemo(() => plan?.entries.filter((e) => !e.problems.length).length ?? 0, [plan]);
@@ -83,6 +84,7 @@ export function ScanPage() {
     const out = await scan(provider, apiKey, image, accounts, todayISO());
     setBusy(false);
     if (!out.ok) return setErrors([out.reason]);
+    setReadBy(out.model && out.model !== PROVIDERS[provider].model ? out.model : null);
     const p = planScan(out.scan, accounts, todayISO());
     if (!p.entries.length && !p.opening) return setErrors(["The AI didn't find any balances or transactions on this page."]);
     setPlan(p);
@@ -161,6 +163,12 @@ export function ScanPage() {
               {postable} of {plan.entries.length} entries ready
             </span>
           </div>
+
+          {readBy && (
+            <p className="text-xs text-slate-500">
+              {PROVIDERS[provider].model} was busy, so {readBy} read this page.
+            </p>
+          )}
 
           {plan.notes && (
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">

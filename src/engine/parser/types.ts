@@ -48,4 +48,11 @@ export interface ScanImage {
   mimeType: string;
 }
 
-export type ScanOutcome = { ok: true; scan: import('../scan').ScanResult } | { ok: false; reason: string };
+export type ScanOutcome =
+  | {
+      ok: true;
+      scan: import('../scan').ScanResult;
+      /** The model that actually read the page (may be a backup if the first was busy). */
+      model?: string;
+    }
+  | { ok: false; reason: string };
