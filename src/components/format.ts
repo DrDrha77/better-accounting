@@ -8,6 +8,19 @@ export function fmtDate(iso?: string): string {
   return Number.isNaN(d.getTime()) ? iso : dateFmt.format(d);
 }
 
+/** Save text as a file the user downloads. */
+export function downloadFile(filename: string, content: string, type: string) {
+  const blob = new Blob([content], { type: `${type};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 export function downloadCsv(filename: string, csv: string) {
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);

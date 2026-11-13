@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useSaveStatus } from '../store/safeStorage';
 import { cx } from './format';
 import { useSlidingIndicator } from './useSlidingIndicator';
 import { useApplyTheme } from './useTheme';
@@ -37,6 +38,7 @@ export function Layout() {
   useApplyTheme();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const saveFailed = useSaveStatus((s) => s.failed);
   const { containerRef: tabsRef, indicator: tabPill } = useSlidingIndicator<HTMLElement>([location.pathname]);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
@@ -84,6 +86,15 @@ export function Layout() {
           </nav>
         )}
       </header>
+
+      {saveFailed && (
+        <div role="alert" className="mx-auto mt-3 max-w-[1400px] px-3 sm:px-4 print:hidden">
+          <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-red-300">
+            <strong>Your changes can't be saved in this browser right now</strong> (a private window or full storage). Your work will be lost when you close this
+            page. Download a backup in <NavLink to="/settings" className="font-semibold underline">Settings</NavLink>.
+          </div>
+        </div>
+      )}
 
       <main className="px-3 py-6 sm:px-4 print:p-0">
         <div className="mx-auto max-w-[1400px]">

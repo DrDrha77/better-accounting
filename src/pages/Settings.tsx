@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { OpeningBalancesCard } from '../components/OpeningBalancesCard';
-import { cx, fmtDate, formatCents } from '../components/format';
+import { cx, downloadFile, fmtDate, formatCents } from '../components/format';
 import { Button, Card, ErrorList, Field, inputClass, PageHeader } from '../components/ui';
 import { lazyAiParser } from '../components/useTransactionParser';
 import { ACCOUNT_TYPES, sortAccounts, suggestAccountNumber, SYSTEM_KEYS, TYPE_LABELS } from '../engine/accounts';
@@ -13,7 +13,9 @@ import type { ParseResult } from '../engine/parser/types';
 import { openingStatement } from '../engine/reports';
 import type { Account, AccountType } from '../engine/types';
 import { useBooks } from '../store/useBooks';
+import { useSaveStatus } from '../store/safeStorage';
 import { useSettings, type StylePref, type ThemePref } from '../store/useSettings';
+import { backupFilename, makeBackup, parseBackup } from '../engine/backup';
 import { BalanceSheetBody } from './BalanceSheet';
 
 const MODES: { value: AiMode; label: string; help: string }[] = [
@@ -409,15 +411,105 @@ function AppearanceCard() {
 }
 
 function BooksCard() {
-  const { entries, loadSample, reset } = useBooks();
+  const { accounts, entries, nextSeq, loadSample, reset, restore } = useBooks();
+  const { companyName, entryDate, periodFrom, theme, style, lastBackupAt, setCompanyName, setEntryDate, setPeriodFrom, setTheme, setStyle, setLastBackupAt } =
+    useSettings();
+  const failed = useSaveStatus((s) => s.failed);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [protectedStorage, setProtectedStorage] = useState<boolean | 'unsupported'>('unsupported');
+
+  useEffect(() => {
+    if (navigator.storage?.persisted) void navigator.storage.persisted().then(setProtectedStorage);
+  }, []);
+
   const confirmThen = (msg: string, fn: () => void) => {
     if (!entries.length || window.confirm(msg)) fn();
   };
+
+  const download = () => {
+    const now = new Date();
+    const backup = makeBackup({ accounts, entries, nextSeq }, { companyName, entryDate, periodFrom, theme, style }, now);
+    downloadFile(backupFilename(now), JSON.stringify(backup, null, 2), 'application/json');
+    setLastBackupAt(now.toISOString());
+    setErrors([]);
+    setMessage('Backup downloaded. Keep the file somewhere safe, like your Downloads folder, cloud drive or email.');
+  };
+
+  const chooseFile = async (file: File | undefined) => {
+    if (!file) return;
+    setMessage(null);
+    const r = parseBackup(await file.text());
+    if (fileRef.current) fileRef.current.value = '';
+    if (!r.ok) return setErrors([r.reason]);
+    const when = r.exportedAt ? ` saved ${fmtDate(r.exportedAt.slice(0, 10))}` : '';
+    if (!window.confirm(`Replace your current books with this backup${when}? It has ${r.entryCount} journal ${r.entryCount === 1 ? 'entry' : 'entries'} and ${r.accountCount} accounts. Your current books will be overwritten.`)) return;
+    restore(r.books);
+    setCompanyName(r.settings.companyName);
+    setEntryDate(r.settings.entryDate);
+    setPeriodFrom(r.settings.periodFrom);
+    setTheme(r.settings.theme);
+    setStyle(r.settings.style);
+    setErrors([]);
+    setMessage(`Restored ${r.entryCount} journal ${r.entryCount === 1 ? 'entry' : 'entries'} and ${r.accountCount} accounts from the backup.`);
+  };
+
+  const protect = async () => {
+    try {
+      const granted = await navigator.storage.persist();
+      setProtectedStorage(granted);
+      setMessage(granted ? 'Done. Your browser will keep this data unless you clear it yourself.' : "Your browser said no this time. Download a backup to be safe.");
+    } catch {
+      setMessage("Couldn't ask the browser. Download a backup to be safe.");
+    }
+  };
+
   return (
     <Card className="p-5 sm:p-6">
       <SectionTitle>Your books</SectionTitle>
-      <p className="mt-1 text-sm text-slate-600">Everything is saved in this browser.</p>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <p className="mt-1 text-sm text-slate-600">
+        Everything is saved in <strong>this browser only</strong>. It doesn't sync to other browsers or devices, and clearing the site's data erases it, so download
+        a backup now and then.
+      </p>
+
+      {failed && (
+        <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">
+          This browser is refusing to save right now (a private window or full storage). Download a backup so you don't lose your work.
+        </p>
+      )}
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <Button variant="primary" onClick={download}>
+          Download backup
+        </Button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          aria-label="Backup file to restore"
+          onChange={(e) => void chooseFile(e.target.files?.[0])}
+        />
+        <Button onClick={() => fileRef.current?.click()}>Restore from backup</Button>
+        <span className="text-sm text-slate-600">{lastBackupAt ? `Last backup: ${fmtDate(lastBackupAt.slice(0, 10))}` : 'No backup yet'}</span>
+      </div>
+
+      {protectedStorage !== 'unsupported' && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-700">
+          <span>
+            Browser protection: <strong>{protectedStorage ? 'on (the browser won’t clear this data on its own)' : 'off (the browser may clear it if space runs low)'}</strong>
+          </span>
+          {!protectedStorage && <Button onClick={() => void protect()}>Ask the browser to keep it</Button>}
+        </div>
+      )}
+
+      <div className="mt-3 space-y-2">
+        <ErrorList errors={errors} />
+        {message && <p className="text-sm text-cyan-700">{message}</p>}
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-400/25 pt-4">
         <Button onClick={() => confirmThen('Replace your current books with sample data?', loadSample)}>Load sample data</Button>
         <Button variant="danger" onClick={() => confirmThen('Erase all entries and reset the chart of accounts? This cannot be undone.', reset)}>
           Reset books
