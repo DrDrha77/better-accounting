@@ -58,3 +58,16 @@ export function parseAmount(input: string): Cents | null {
 export function sum(values: Cents[]): Cents {
   return values.reduce((a, b) => a + b, 0);
 }
+
+/**
+ * Parse an amount typed on an account's normal side. A leading minus (or brackets) means the
+ * balance is on the other side, e.g. an overdrawn bank account. Returns signed cents, 0 for
+ * blank, or null if it isn't a number.
+ */
+export function parseSignedAmount(text: string): Cents | null {
+  const t = text.trim();
+  if (!t) return 0;
+  const negative = /^-|^\(.*\)$/.test(t);
+  const cents = parseAmount(t.replace(/^-\s*/, '').replace(/^\((.*)\)$/, '$1'));
+  return cents === null ? null : negative ? -cents : cents;
+}

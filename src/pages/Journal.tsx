@@ -4,6 +4,7 @@ import { EntryEditor } from '../components/EntryEditor';
 import { fmtDate, formatPlain } from '../components/format';
 import { QuickPost } from '../components/QuickPost';
 import { SaveForDate } from '../components/SaveForDate';
+import { ScanPage } from '../components/ScanPage';
 import { ReportShell } from '../components/ReportShell';
 import { TransactionComposer } from '../components/TransactionComposer';
 import { Button, Card, Field, inputClass } from '../components/ui';
@@ -91,6 +92,9 @@ export function Journal() {
           </div>
           <div className="border-t border-slate-400/25 pt-5">
             <QuickPost />
+          </div>
+          <div className="border-t border-slate-400/25 pt-5">
+            <ScanPage />
           </div>
         </Card>
         </div>

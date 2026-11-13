@@ -6,7 +6,9 @@
  */
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import { AiEntrySchema, buildUserMessage, describeError, SYSTEM_PROMPT, toParseResult, type AiEntry } from './aiShared';
-import type { ParseContext, ParseResult, TransactionParser } from './types';
+import { buildScanText, SCAN_PROMPT, ScanSchema } from '../scan';
+import type { Account } from '../types';
+import type { ParseContext, ParseResult, ScanImage, ScanOutcome, TransactionParser } from './types';
 
 export type { AiEntry } from './aiShared';
 export { toParseResult } from './aiShared';
@@ -69,5 +71,43 @@ export class ClaudeParser implements TransactionParser {
     } catch (err) {
       return { status: 'unmatched', source: 'ai', reason: describeError(err, 'Anthropic') };
     }
+  }
+}
+
+// ---------------------------------------------------------------- scanning a page
+
+export function buildClaudeScanRequest(image: ScanImage, accounts: Account[], today: string) {
+  return {
+    model: CLAUDE_MODEL,
+    max_tokens: 16000,
+    betas: ['server-side-fallback-2026-07-01'],
+    fallbacks: 'default' as const,
+    // Journalizing a whole page is real work: medium effort.
+    output_config: { effort: 'medium' as const, format: betaZodOutputFormat(ScanSchema) },
+    system: SCAN_PROMPT,
+    messages: [
+      {
+        role: 'user' as const,
+        content: [
+          { type: 'image' as const, source: { type: 'base64' as const, media_type: image.mimeType, data: image.data } },
+          { type: 'text' as const, text: buildScanText(accounts, today) },
+        ],
+      },
+    ],
+  };
+}
+
+/** Read a photo of an exercise/worksheet with Claude. */
+export async function scanWithClaude(apiKey: string, image: ScanImage, accounts: Account[], today: string, client?: ClaudeClientLike): Promise<ScanOutcome> {
+  try {
+    const c = client ?? (await defaultClient(apiKey));
+    const res = (await c.beta.messages.parse(buildClaudeScanRequest(image, accounts, today))) as { stop_reason: string | null; parsed_output?: unknown };
+    if (res.stop_reason === 'refusal') return { ok: false, reason: 'The AI declined to read this page.' };
+    if (res.stop_reason === 'max_tokens') return { ok: false, reason: 'The page has too much on it to read in one go. Try a photo of fewer transactions.' };
+    const parsed = ScanSchema.safeParse(res.parsed_output);
+    if (parsed.success) return { ok: true, scan: parsed.data };
+    return { ok: false, reason: "The AI's answer couldn't be read. Try again, or use a clearer photo." };
+  } catch (err) {
+    return { ok: false, reason: describeError(err, 'Anthropic') };
   }
 }
