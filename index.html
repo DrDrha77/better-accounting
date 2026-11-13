@@ -11,11 +11,13 @@
       // Set the theme before first paint so dark mode doesn't flash light.
       (function () {
         var pref = 'system';
-        var style = 'ledger';
+        var style = 'gradient';
         try {
-          var saved = (JSON.parse(localStorage.getItem('better-accounting:settings')) || {}).state || {};
+          var stored = JSON.parse(localStorage.getItem('better-accounting:settings')) || {};
+          var saved = stored.state || {};
           pref = saved.theme || 'system';
-          style = saved.style || 'ledger';
+          // Lined paper only if chosen after the v4 redesign; everyone else gets the gradient.
+          style = stored.version >= 4 && saved.style === 'ledger' ? 'ledger' : 'gradient';
         } catch (e) {}
         document.documentElement.dataset.style = style;
         var dark = pref === 'dark' || (pref !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);

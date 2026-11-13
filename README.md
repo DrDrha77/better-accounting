@@ -1,14 +1,13 @@
 # Better Accounting
 
-Type business transactions in plain English ("Owner invested $40,000 into the business") and get a balanced double-entry journal entry. Every record (journal, general ledger, T-accounts, trial balance, income statement, balance sheet, statement of owner's equity, opening statement) is derived live from the journal.
+Type business transactions in plain English ("Owner invested $40,000 into the business") and get a balanced double-entry journal entry. Every record (journal, general ledger, T-accounts, trial balance, income statement, balance sheet, opening statement) is derived live from the journal.
 
 No backend: data is kept in your browser's localStorage.
 
-Two looks, switchable in **Settings → Appearance** (each with light and dark):
-- **Classic ledger** (default): lined-paper background, serif headings, deep-green pill tabs across the top with a "More" menu.
-- **Liquid glass**: frosted glass over a deep-ocean background, with a sidebar.
+Tabs: **Journal** (home) · Ledger · T-Accounts · Trial Balance · Balance Sheet · Income Statement · **Settings**.
 
-The **Journal** page is the main entry point: type a transaction in plain English, use **Quick post** (date, amount, debit account, credit account), or open a **Blank draft** for multi-line entries. It shows a textbook journal (Date, Description, PR, Debit, Credit) with a date filter and a **Clear journal** button that keeps your accounts and opening balances.
+- **Journal** is the main entry point: type a transaction in plain English, use **Quick post** (date, amount, debit account, credit account), or open a **Blank draft** for multi-line entries. **Save for date** sets the date new entries start on (handy when catching up on an earlier month). The textbook journal shows Date, Description, PR, Amount (Dr. $) and Amount (Cr. $), with a date filter and **Clear journal** (keeps accounts and opening balances). **Opening balances** opens the opening-balance screen.
+- **Settings** holds the **company name** (shown on statements), the **chart of accounts** (add, see how many entries use each account, delete unused ones), the **opening statement**, the AI key, appearance (mint gradient or lined paper; light or dark), and Load sample data / Reset books.
 
 ## Run it
 

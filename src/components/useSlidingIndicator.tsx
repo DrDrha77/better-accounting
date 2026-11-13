@@ -43,7 +43,7 @@ export function useSlidingIndicator<T extends HTMLElement>(deps: DependencyList)
   const indicator = box ? (
     <span
       aria-hidden="true"
-      className={cx('bubble-active tab-indicator pointer-events-none absolute z-0 rounded-full', animate && 'tab-indicator-animate')}
+      className={cx('pill-active tab-indicator pointer-events-none absolute z-0 rounded-full', animate && 'tab-indicator-animate')}
       style={box}
     />
   ) : null;

@@ -221,7 +221,7 @@ export function OpeningBalances() {
           </table>
         </div>
 
-        <div className="glass-strong sticky bottom-3 -mx-2 mt-4 rounded-[1.5rem] px-5 py-4">
+        <div className="card-strong sticky bottom-3 -mx-2 mt-4 rounded-[1.5rem] px-5 py-4">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
             <span>
               Debits <strong className="tabular-nums">{formatCents(totals.debit)}</strong>

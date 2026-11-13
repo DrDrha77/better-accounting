@@ -4,7 +4,7 @@ import { todayISO } from '../engine/journal';
 import { PROVIDERS } from '../engine/parser/modelInfo';
 import type { ParseResult } from '../engine/parser/types';
 import { useBooks } from '../store/useBooks';
-import { useSettings } from '../store/useSettings';
+import { defaultEntryDate, useSettings } from '../store/useSettings';
 import { blankLines, EntryEditor } from './EntryEditor';
 import { formatCents } from './format';
 import { Button } from './ui';
@@ -46,6 +46,8 @@ export function TransactionComposer({
 }) {
   const { accounts, addEntry } = useBooks();
   const provider = useSettings((s) => s.aiProvider);
+  const entryDate = useSettings((s) => s.entryDate);
+  const startDate = defaultEntryDate(entryDate, todayISO());
   const [text, setText] = useState('');
   const [mode, setMode] = useState<Mode>({ kind: 'idle' });
   const [saved, setSaved] = useState<string | null>(null);
@@ -65,7 +67,7 @@ export function TransactionComposer({
     setBusy(true);
     setMode({ kind: 'idle' });
     try {
-      const result = await parser.parse(input, { accounts, today: todayISO() });
+      const result = await parser.parse(input, { accounts, today: startDate });
       if (result.status === 'matched') setMode({ kind: 'preview', result, text: input, nonce: Date.now() });
       else
         setMode({
@@ -98,7 +100,7 @@ export function TransactionComposer({
       >
         <input
           aria-label="Describe a transaction"
-          className="glass-inset flex-1 rounded-full px-5 py-3 text-base text-slate-900 placeholder:text-slate-400 transition focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
+          className="field flex-1 rounded-full px-5 py-3 text-base text-slate-900 placeholder:text-slate-400 transition focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
           placeholder="Describe a transaction, e.g. “Bought a car for 4000”"
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -115,7 +117,7 @@ export function TransactionComposer({
           <button
             key={ex}
             type="button"
-            className="glass-inset rounded-full px-3 py-1 text-xs text-slate-600 transition-all duration-300 ease-bubble hover:scale-105 hover:text-cyan-800"
+            className="field rounded-full px-3 py-1 text-xs text-slate-600 transition-all duration-300 ease-bubble hover:scale-105 hover:text-cyan-800"
             onClick={() => {
               setText(ex);
               void submit(ex);
@@ -189,7 +191,7 @@ export function TransactionComposer({
           <EntryEditor
             key={mode.nonce}
             accounts={accounts}
-            initial={{ date: todayISO(), description: mode.text, lines: blankLines(), sourceText: mode.text || undefined }}
+            initial={{ date: startDate, description: mode.text, lines: blankLines(), sourceText: mode.text || undefined }}
             banner={
               mode.reason ? (
                 <div className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
