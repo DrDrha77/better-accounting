@@ -4,6 +4,7 @@ import { withMissingDefaults } from '../engine/accounts';
 import * as ops from '../engine/books';
 import type { OpeningBalanceInput } from '../engine/opening';
 import { buildSampleBooks } from '../engine/sample';
+import { safeLocalStorage } from './safeStorage';
 import type { Books, EntryDraft } from '../engine/types';
 
 export type ActionResult = { ok: true; id?: string } | { ok: false; errors: string[] };
@@ -20,6 +21,8 @@ interface BooksState extends Books {
   deleteAccount(id: string): ActionResult;
   loadSample(): void;
   reset(): void;
+  /** Replace everything with a validated backup. */
+  restore(books: Books): void;
 }
 
 const pickBooks = (s: Books): Books => ({ accounts: s.accounts, entries: s.entries, nextSeq: s.nextSeq });
@@ -47,12 +50,13 @@ export const useBooks = create<BooksState>()(
         deleteAccount: (id) => apply((b) => ops.deleteAccount(b, id)),
         loadSample: () => set(buildSampleBooks()),
         reset: () => set(ops.emptyBooks()),
+        restore: (books) => set({ accounts: books.accounts, entries: books.entries, nextSeq: books.nextSeq }),
       };
     },
     {
       name: 'better-accounting:books',
       version: 2,
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => safeLocalStorage),
       partialize: (s) => pickBooks(s),
       // v2 added default accounts (Vehicles, Furniture, Advertising, …); give saved books the ones they lack.
       migrate: (persisted) => {
