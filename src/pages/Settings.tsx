@@ -8,7 +8,7 @@ import type { AiMode } from '../engine/parser/hybridParser';
 import { PROVIDERS } from '../engine/parser/modelInfo';
 import type { ParseResult } from '../engine/parser/types';
 import { useBooks } from '../store/useBooks';
-import { useSettings, type ThemePref } from '../store/useSettings';
+import { useSettings, type StylePref, type ThemePref } from '../store/useSettings';
 
 const MODES: { value: AiMode; label: string; help: string }[] = [
   { value: 'fallback', label: 'When the rules can’t tell (recommended)', help: 'Common sentences are recognised instantly for free; only the tricky ones are sent to the AI.' },
@@ -20,6 +20,11 @@ const THEMES: { value: ThemePref; label: string }[] = [
   { value: 'system', label: 'Match my device' },
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' },
+];
+
+const STYLES: { value: StylePref; label: string }[] = [
+  { value: 'ledger', label: 'Classic ledger' },
+  { value: 'glass', label: 'Liquid glass' },
 ];
 
 const TEST_SENTENCE = 'Bought a used delivery van for 18,500, paid 5,000 cash and financed the rest';
@@ -47,7 +52,7 @@ function Segmented<T extends string>({ value, options, onChange, label }: { valu
 }
 
 export function Settings() {
-  const { aiProvider, apiKeys, aiMode, theme, setProvider, setApiKey, setAiMode, setTheme } = useSettings();
+  const { aiProvider, apiKeys, aiMode, theme, style, setProvider, setApiKey, setAiMode, setTheme, setStyle } = useSettings();
   const accounts = useBooks((s) => s.accounts);
   const savedKey = apiKeys[aiProvider];
   const info = PROVIDERS[aiProvider];
@@ -206,8 +211,20 @@ export function Settings() {
 
       <Card className="p-6">
         <h2 className="text-lg font-semibold text-slate-900">Appearance</h2>
-        <div className="mt-3">
-          <Segmented label="Theme" value={theme} onChange={setTheme} options={THEMES} />
+        <div className="mt-3 space-y-4">
+          <div>
+            <div className="mb-2 text-sm font-medium text-slate-600">Style</div>
+            <Segmented label="Style" value={style} onChange={setStyle} options={STYLES} />
+            <p className="mt-2 text-xs text-slate-500">
+              {style === 'ledger'
+                ? 'Lined paper, serif headings and tabs across the top.'
+                : 'Frosted glass over a deep-ocean background, with a sidebar.'}
+            </p>
+          </div>
+          <div>
+            <div className="mb-2 text-sm font-medium text-slate-600">Light or dark</div>
+            <Segmented label="Theme" value={theme} onChange={setTheme} options={THEMES} />
+          </div>
         </div>
       </Card>
     </div>

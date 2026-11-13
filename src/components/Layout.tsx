@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useBooks } from '../store/useBooks';
 import { useSettings, type ThemePref } from '../store/useSettings';
 import { cx } from './format';
@@ -75,16 +75,142 @@ function ThemeSwitch() {
   );
 }
 
+/** Pages shown as tabs in the classic ledger style; the rest go in "More". */
+const PRIMARY = ['/', '/journal', '/ledger', '/t-accounts', '/trial-balance', '/balance-sheet', '/income-statement', '/settings'];
+
 export function Layout() {
   useApplyTheme();
-  const [open, setOpen] = useState(false);
+  const style = useSettings((s) => s.style);
+  return style === 'glass' ? <GlassLayout /> : <LedgerLayout />;
+}
+
+function useBookActions() {
   const loadSample = useBooks((s) => s.loadSample);
   const reset = useBooks((s) => s.reset);
   const hasEntries = useBooks((s) => s.entries.length > 0);
-
   const confirmThen = (msg: string, fn: () => void) => {
     if (!hasEntries || window.confirm(msg)) fn();
   };
+  return {
+    loadSample: () => confirmThen('Replace your current books with sample data?', loadSample),
+    reset: () => confirmThen('Erase all entries and reset the chart of accounts? This cannot be undone.', reset),
+  };
+}
+
+const tabClass = ({ isActive }: { isActive: boolean }) =>
+  cx(
+    'whitespace-nowrap rounded-full px-4 py-1.5 text-sm transition-all duration-200',
+    isActive ? 'bubble-active font-semibold text-white' : 'text-slate-700 hover:bg-slate-500/10 hover:text-slate-900',
+  );
+
+function LedgerLayout() {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const actions = useBookActions();
+  const location = useLocation();
+  const primary = PRIMARY.map((to) => NAV.find((n) => n.to === to)!);
+  const more = NAV.filter((n) => !PRIMARY.includes(n.to));
+  const moreActive = more.some((n) => n.to === location.pathname);
+
+  // Close menus when the page changes.
+  useEffect(() => {
+    setMoreOpen(false);
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  return (
+    <div className="min-h-screen">
+      <header className="px-4 pt-5 sm:px-8 print:hidden">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3">
+          <div>
+            <div className="brand text-2xl font-extrabold text-slate-900 sm:text-3xl">Better Accounting</div>
+            <div className="text-sm text-slate-600">Plain-English bookkeeping — enter once, every statement updates</div>
+          </div>
+
+          <button
+            type="button"
+            className="glass-inset rounded-full px-4 py-1.5 text-sm font-semibold text-slate-700 lg:hidden"
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen((o) => !o)}
+          >
+            {mobileOpen ? 'Close' : 'Menu'}
+          </button>
+
+          <nav className="hidden flex-wrap items-center justify-end gap-1 lg:flex" aria-label="Main">
+            {primary.map((n) => (
+              <NavLink key={n.to} to={n.to} end={n.to === '/'} className={tabClass}>
+                {n.label}
+              </NavLink>
+            ))}
+            <div className="relative">
+              <button
+                type="button"
+                aria-expanded={moreOpen}
+                aria-haspopup="menu"
+                onClick={() => setMoreOpen((o) => !o)}
+                className={tabClass({ isActive: moreActive })}
+              >
+                More ▾
+              </button>
+              {moreOpen && (
+                <>
+                  <button type="button" aria-label="Close menu" className="fixed inset-0 z-30 cursor-default" onClick={() => setMoreOpen(false)} />
+                  <div role="menu" className="glass-strong pop-in absolute right-0 z-40 mt-2 w-60 space-y-1 rounded-2xl p-2">
+                    {more.map((n) => (
+                      <NavLink key={n.to} to={n.to} role="menuitem" className={({ isActive }) => cx(tabClass({ isActive }), 'block')}>
+                        {n.label}
+                      </NavLink>
+                    ))}
+                    <div className="my-1 border-t border-slate-400/25" />
+                    <div className="px-1 py-1">
+                      <ThemeSwitch />
+                    </div>
+                    <button type="button" role="menuitem" className="block w-full rounded-full px-4 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-500/10" onClick={() => { setMoreOpen(false); actions.loadSample(); }}>
+                      Load sample data
+                    </button>
+                    <button type="button" role="menuitem" className="block w-full rounded-full px-4 py-1.5 text-left text-sm text-red-600 hover:bg-red-500/10" onClick={() => { setMoreOpen(false); actions.reset(); }}>
+                      Reset books
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </nav>
+        </div>
+
+        {mobileOpen && (
+          <nav className="glass-strong pop-in mx-auto mt-3 max-w-6xl space-y-1 rounded-2xl p-2 lg:hidden" aria-label="Main">
+            {NAV.map((n) => (
+              <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => cx(tabClass({ isActive }), 'block')}>
+                {n.label}
+              </NavLink>
+            ))}
+            <div className="my-1 border-t border-slate-400/25" />
+            <div className="px-1 py-1">
+              <ThemeSwitch />
+            </div>
+            <button type="button" className="block w-full rounded-full px-4 py-1.5 text-left text-sm text-slate-700" onClick={() => { setMobileOpen(false); actions.loadSample(); }}>
+              Load sample data
+            </button>
+            <button type="button" className="block w-full rounded-full px-4 py-1.5 text-left text-sm text-red-600" onClick={() => { setMobileOpen(false); actions.reset(); }}>
+              Reset books
+            </button>
+          </nav>
+        )}
+      </header>
+
+      <main className="px-4 py-6 sm:px-8 print:p-0">
+        <div className="mx-auto max-w-6xl">
+          <Outlet />
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function GlassLayout() {
+  const [open, setOpen] = useState(false);
+  const actions = useBookActions();
 
   return (
     <div className="min-h-screen lg:flex lg:gap-2 lg:p-3">
@@ -142,14 +268,14 @@ export function Layout() {
           <button
             type="button"
             className="block w-full rounded-full px-4 py-2 text-left text-sm text-slate-600 transition hover:bg-white/30"
-            onClick={() => confirmThen('Replace your current books with sample data?', loadSample)}
+            onClick={actions.loadSample}
           >
             Load sample data
           </button>
           <button
             type="button"
             className="block w-full rounded-full px-4 py-2 text-left text-sm text-red-600 transition hover:bg-red-500/10"
-            onClick={() => confirmThen('Erase all entries and reset the chart of accounts? This cannot be undone.', reset)}
+            onClick={actions.reset}
           >
             Reset books
           </button>

@@ -107,3 +107,8 @@ export function deleteAccount(books: Books, id: string): Result {
     return { ok: false, errors: ["This account has transactions and can't be deleted."] };
   return { ok: true, books: { ...books, accounts: books.accounts.filter((a) => a.id !== id) } };
 }
+
+/** Delete every journal entry except the opening balance. Accounts are kept. */
+export function clearJournal(books: Books): Result {
+  return { ok: true, books: { ...books, entries: books.entries.filter((e) => e.kind === 'opening') } };
+}

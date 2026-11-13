@@ -12,6 +12,7 @@ interface BooksState extends Books {
   addEntry(draft: EntryDraft): ActionResult;
   updateEntry(id: string, draft: EntryDraft): ActionResult;
   deleteEntry(id: string): ActionResult;
+  clearJournal(): ActionResult;
   saveOpening(input: OpeningBalanceInput): ActionResult;
   removeOpening(): ActionResult;
   addAccount(input: ops.NewAccount): ActionResult;
@@ -38,6 +39,7 @@ export const useBooks = create<BooksState>()(
         addEntry: (d) => apply((b) => ops.addEntry(b, d)),
         updateEntry: (id, d) => apply((b) => ops.updateEntry(b, id, d)),
         deleteEntry: (id) => apply((b) => ops.deleteEntry(b, id)),
+        clearJournal: () => apply((b) => ops.clearJournal(b)),
         saveOpening: (input) => apply((b) => ops.saveOpening(b, input)),
         removeOpening: () => apply((b) => ops.removeOpening(b)),
         addAccount: (input) => apply((b) => ops.addAccount(b, input)),

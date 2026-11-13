@@ -6,14 +6,18 @@
     <title>Better Accounting</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <script>
       // Set the theme before first paint so dark mode doesn't flash light.
       (function () {
         var pref = 'system';
+        var style = 'ledger';
         try {
-          pref = (JSON.parse(localStorage.getItem('better-accounting:settings')) || {}).state.theme || 'system';
+          var saved = (JSON.parse(localStorage.getItem('better-accounting:settings')) || {}).state || {};
+          pref = saved.theme || 'system';
+          style = saved.style || 'ledger';
         } catch (e) {}
+        document.documentElement.dataset.style = style;
         var dark = pref === 'dark' || (pref !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         document.documentElement.dataset.theme = dark ? 'dark' : 'light';
       })();
