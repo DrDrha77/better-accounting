@@ -69,8 +69,9 @@ export function Journal() {
         </>
       }
     >
-      {showComposer && (
-        <Card className="mb-5 space-y-6 p-5 print:hidden">
+      <div className="collapse-panel mb-5 print:hidden" data-open={showComposer} aria-hidden={!showComposer} {...(showComposer ? {} : { inert: '' })}>
+        <div>
+        <Card className="space-y-6 p-5">
           <div>
             <div className="text-base font-semibold text-slate-900">Describe it</div>
             <p className="mb-3 text-sm text-slate-500">Type it in plain English, like “Bought a car for 4000”, and check the entry before it’s saved.</p>
@@ -80,7 +81,8 @@ export function Journal() {
             <QuickPost />
           </div>
         </Card>
-      )}
+        </div>
+      </div>
 
       <Card className="overflow-x-auto">
         <div className="journal-title px-4 pt-4 text-center text-lg font-bold text-slate-900">General Journal</div>
