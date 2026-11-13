@@ -16,11 +16,11 @@
   --blob-b: rgba(59, 130, 246, 0.35);
   --blob-c: rgba(45, 212, 191, 0.4);
 
-  --glass-bg: rgba(255, 255, 255, 0.52);
-  --glass-bg-strong: rgba(255, 255, 255, 0.72);
-  --glass-inset: rgba(255, 255, 255, 0.38);
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-bg-strong: rgba(255, 255, 255, 0.9);
+  --glass-inset: rgba(255, 255, 255, 0.66);
   --glass-border: rgba(255, 255, 255, 0.75);
-  --glass-edge: rgba(15, 60, 90, 0.08);
+  --glass-edge: rgba(15, 60, 90, 0.12);
   --glass-shine: rgba(255, 255, 255, 0.9);
   --glass-shadow: 0 10px 40px -12px rgba(8, 47, 73, 0.28), 0 2px 8px -2px rgba(8, 47, 73, 0.08);
 
@@ -104,6 +104,10 @@ body {
   50% { transform: translate(18px, -55vh); }
   100% { transform: translate(-12px, -115vh); opacity: 0; }
 }
+@keyframes page-in {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: none; }
+}
 @keyframes pop-in {
   0% { opacity: 0; transform: translateY(8px) scale(0.98); }
   100% { opacity: 1; transform: none; }
@@ -141,6 +145,44 @@ body {
   .pop-in {
     animation: pop-in 0.45s cubic-bezier(.34,1.56,.64,1) both;
   }
+  /* Each page eases in when you navigate to it. */
+  .page-enter {
+    animation: page-in 0.38s cubic-bezier(.2,.8,.2,1) both;
+  }
+  /* Smooth open/close for panels like the Journal composer. */
+  .collapse-panel {
+    display: grid;
+    grid-template-rows: 1fr;
+    opacity: 1;
+    transition: grid-template-rows 0.4s cubic-bezier(.2,.8,.2,1), opacity 0.3s ease, margin 0.4s ease;
+  }
+  .collapse-panel[data-open='false'] {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    margin-bottom: 0;
+    pointer-events: none;
+  }
+  .collapse-panel > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+/* Switching light/dark or style fades instead of flashing. */
+body,
+.glass,
+.glass-strong,
+.glass-inset,
+.bubble-active {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 0.35s;
+  transition-timing-function: ease;
+}
+
+/* The active-tab pill glides between tabs (declared after the fade rule so it wins). */
+.bubble-active.tab-indicator-animate {
+  transition: left 0.45s cubic-bezier(.34,1.3,.64,1), top 0.45s cubic-bezier(.34,1.3,.64,1),
+    width 0.45s cubic-bezier(.34,1.3,.64,1), height 0.45s cubic-bezier(.34,1.3,.64,1), background-color 0.35s ease;
 }
 
 /* ------------------------------------------------------------------
@@ -211,7 +253,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ocean .blob, .ocean .bubble, .pop-in { animation: none !important; }
+  .ocean .blob, .ocean .bubble, .pop-in, .page-enter { animation: none !important; }
+  .tab-indicator-animate, .collapse-panel { transition: none !important; }
   .ocean .bubble { display: none; }
 }
 

@@ -21,6 +21,8 @@ const themedColors = Object.fromEntries(
 
 // Muted grays need a bit more light than a straight inversion gives them on deep water.
 const DARK_OVERRIDES = { slate: { 400: '400', 500: '300' } };
+// Light mode: secondary text one step darker than Tailwind's defaults, so it reads easily on paper and glass.
+const LIGHT_OVERRIDES = { slate: { 400: '500', 500: '600', 600: '700' } };
 
 /** In the classic ledger style the accent (the `cyan` palette) becomes a deep bookkeeping green. */
 const ledgerAccent = (dark) =>
@@ -29,7 +31,7 @@ const ledgerAccent = (dark) =>
 const vars = (dark) =>
   Object.fromEntries(
     THEMED.flatMap((name) =>
-      SHADES.map((s) => [`--c-${name}-${s}`, rgb(colors[name][dark ? (DARK_OVERRIDES[name]?.[s] ?? INVERT[s]) : s])]),
+      SHADES.map((s) => [`--c-${name}-${s}`, rgb(colors[name][dark ? (DARK_OVERRIDES[name]?.[s] ?? INVERT[s]) : (LIGHT_OVERRIDES[name]?.[s] ?? s)])]),
     ),
   );
 

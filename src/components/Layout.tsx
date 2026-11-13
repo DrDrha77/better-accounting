@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useBooks } from '../store/useBooks';
 import { useSettings, type ThemePref } from '../store/useSettings';
 import { cx } from './format';
+import { useSlidingIndicator } from './useSlidingIndicator';
 import { useApplyTheme } from './useTheme';
 
 export const NAV = [
@@ -103,6 +104,26 @@ const tabClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? 'bubble-active font-semibold text-white' : 'text-slate-700 hover:bg-slate-500/10 hover:text-slate-900',
   );
 
+/** Tabs that sit on top of the sliding pill: the pill supplies the active background. */
+const slidingTabClass = ({ isActive }: { isActive: boolean }) =>
+  cx(
+    'relative z-10 whitespace-nowrap rounded-full px-3 py-1.5 text-sm transition-colors duration-300 xl:px-4',
+    isActive ? 'font-semibold text-white' : 'text-slate-700 hover:bg-slate-500/10 hover:text-slate-900',
+  );
+
+/** Re-mounts the page on navigation so it plays the enter animation, and scrolls to the top. */
+function AnimatedOutlet() {
+  const location = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [location.pathname]);
+  return (
+    <div key={location.pathname} className="page-enter">
+      <Outlet />
+    </div>
+  );
+}
+
 function LedgerLayout() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -111,6 +132,7 @@ function LedgerLayout() {
   const primary = PRIMARY.map((to) => NAV.find((n) => n.to === to)!);
   const more = NAV.filter((n) => !PRIMARY.includes(n.to));
   const moreActive = more.some((n) => n.to === location.pathname);
+  const { containerRef: tabsRef, indicator: tabPill } = useSlidingIndicator<HTMLElement>([location.pathname]);
 
   // Close menus when the page changes.
   useEffect(() => {
@@ -136,19 +158,22 @@ function LedgerLayout() {
             {mobileOpen ? 'Close' : 'Menu'}
           </button>
 
-          <nav className="hidden flex-wrap items-center justify-end gap-1 lg:flex" aria-label="Main">
+          <nav ref={tabsRef} className="relative hidden w-full flex-nowrap items-center gap-0.5 lg:flex" aria-label="Main">
+            {tabPill}
             {primary.map((n) => (
-              <NavLink key={n.to} to={n.to} end={n.to === '/'} className={tabClass}>
+              <NavLink key={n.to} to={n.to} end={n.to === '/'} data-tab className={slidingTabClass}>
                 {n.label}
               </NavLink>
             ))}
-            <div className="relative">
+            <div className="relative z-20">
               <button
                 type="button"
                 aria-expanded={moreOpen}
                 aria-haspopup="menu"
+                data-tab
+                data-active={moreActive ? 'true' : undefined}
                 onClick={() => setMoreOpen((o) => !o)}
-                className={tabClass({ isActive: moreActive })}
+                className={slidingTabClass({ isActive: moreActive })}
               >
                 More ▾
               </button>
@@ -201,7 +226,7 @@ function LedgerLayout() {
 
       <main className="px-4 py-6 sm:px-8 print:p-0">
         <div className="mx-auto max-w-6xl">
-          <Outlet />
+          <AnimatedOutlet />
         </div>
       </main>
     </div>
@@ -210,6 +235,8 @@ function LedgerLayout() {
 
 function GlassLayout() {
   const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const { containerRef: sideRef, indicator: sidePill } = useSlidingIndicator<HTMLElement>([location.pathname, open]);
   const actions = useBookActions();
 
   return (
@@ -243,17 +270,19 @@ function GlassLayout() {
           </div>
           <div className="text-xs text-slate-500">Plain-English bookkeeping</div>
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-3 lg:py-1">
+        <nav ref={sideRef} className="relative flex-1 space-y-1 overflow-y-auto px-3 py-3 lg:py-1">
+          {sidePill}
           {NAV.map((n) => (
             <NavLink
+              data-tab
               key={n.to}
               to={n.to}
               end={n.to === '/'}
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
                 cx(
-                  'block rounded-full px-4 py-2 text-sm transition-all duration-300 ease-bubble',
-                  isActive ? 'bubble-active font-semibold text-white' : 'text-slate-600 hover:translate-x-1 hover:bg-white/30 hover:text-slate-900',
+                  'relative z-10 block rounded-full px-4 py-2 text-sm transition-all duration-300 ease-bubble',
+                  isActive ? 'font-semibold text-white' : 'text-slate-600 hover:translate-x-1 hover:bg-white/30 hover:text-slate-900',
                 )
               }
             >
@@ -284,7 +313,7 @@ function GlassLayout() {
 
       <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 print:p-0">
         <div className="mx-auto max-w-5xl">
-          <Outlet />
+          <AnimatedOutlet />
         </div>
       </main>
     </div>
