@@ -3,54 +3,55 @@
 @tailwind utilities;
 
 /* ------------------------------------------------------------------
-   Liquid glass theme — "deep ocean"
-   Light: sunlit shallows. Dark: deep water. Panels are frosted glass.
+   Look: soft mint gradient (default) or lined notebook paper.
+   White cards, serif headings, deep-green pills with a gold ring.
+   Light and dark both supported.
    ------------------------------------------------------------------ */
 
 :root {
   color-scheme: light;
-  --ocean-1: #e0f7ff;
-  --ocean-2: #c7ecf7;
-  --ocean-3: #b9e4f2;
-  --blob-a: rgba(34, 211, 238, 0.45);
-  --blob-b: rgba(59, 130, 246, 0.35);
-  --blob-c: rgba(45, 212, 191, 0.4);
+  --bg-1: #e3efe8;
+  --bg-2: #f3f7f4;
+  --bg-3: #e6f1ec;
+  --bg-glow: rgba(167, 214, 191, 0.35);
 
-  --glass-bg: rgba(255, 255, 255, 0.78);
-  --glass-bg-strong: rgba(255, 255, 255, 0.9);
-  --glass-inset: rgba(255, 255, 255, 0.66);
-  --glass-border: rgba(255, 255, 255, 0.75);
-  --glass-edge: rgba(15, 60, 90, 0.12);
-  --glass-shine: rgba(255, 255, 255, 0.9);
-  --glass-shadow: 0 10px 40px -12px rgba(8, 47, 73, 0.28), 0 2px 8px -2px rgba(8, 47, 73, 0.08);
+  --paper: #fbfaf5;
+  --paper-rule: rgba(59, 130, 246, 0.12);
+  --paper-margin: rgba(239, 68, 68, 0.22);
 
-  --bubble-from: #22d3ee;
-  --bubble-to: #2563eb;
-  --bubble-glow: rgba(34, 211, 238, 0.45);
-  --bubble-ring: rgba(255, 255, 255, 0.55);
+  --card-bg: rgba(255, 255, 255, 0.92);
+  --card-solid: #ffffff;
+  --card-border: rgba(15, 23, 42, 0.08);
+  --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -18px rgba(15, 60, 45, 0.25);
+  --field-bg: #ffffff;
+  --field-border: rgba(15, 23, 42, 0.16);
+
+  --ink-green: #0f5c47;
+  --ink-green-hover: #0e6b52;
+  --gold: #d4a017;
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --ocean-1: #020b1a;
-  --ocean-2: #03172e;
-  --ocean-3: #052a43;
-  --blob-a: rgba(6, 182, 212, 0.32);
-  --blob-b: rgba(37, 99, 235, 0.3);
-  --blob-c: rgba(20, 184, 166, 0.26);
+  --bg-1: #0b1512;
+  --bg-2: #101c18;
+  --bg-3: #0c1916;
+  --bg-glow: rgba(16, 120, 90, 0.18);
 
-  --glass-bg: rgba(14, 38, 66, 0.45);
-  --glass-bg-strong: rgba(12, 32, 56, 0.72);
-  --glass-inset: rgba(148, 210, 255, 0.07);
-  --glass-border: rgba(148, 210, 255, 0.16);
-  --glass-edge: rgba(0, 0, 0, 0.35);
-  --glass-shine: rgba(186, 230, 253, 0.22);
-  --glass-shadow: 0 16px 50px -12px rgba(0, 0, 0, 0.65), 0 2px 10px -2px rgba(0, 0, 0, 0.4);
+  --paper: #11161d;
+  --paper-rule: rgba(147, 197, 253, 0.07);
+  --paper-margin: rgba(248, 113, 113, 0.16);
 
-  --bubble-from: #22d3ee;
-  --bubble-to: #3b82f6;
-  --bubble-glow: rgba(34, 211, 238, 0.35);
-  --bubble-ring: rgba(186, 230, 253, 0.35);
+  --card-bg: rgba(22, 32, 29, 0.92);
+  --card-solid: #16201d;
+  --card-border: rgba(226, 232, 240, 0.09);
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 14px 36px -18px rgba(0, 0, 0, 0.7);
+  --field-bg: #121b18;
+  --field-border: rgba(226, 232, 240, 0.16);
+
+  --ink-green: #12795c;
+  --ink-green-hover: #15916d;
+  --gold: #e0b43a;
 }
 
 html {
@@ -58,52 +59,34 @@ html {
 }
 
 body {
-  background: linear-gradient(170deg, var(--ocean-1) 0%, var(--ocean-2) 45%, var(--ocean-3) 100%) fixed;
   @apply text-slate-900;
+  background-color: var(--bg-2);
+  background-image:
+    radial-gradient(60rem 40rem at 10% -10%, var(--bg-glow), transparent 60%),
+    radial-gradient(50rem 36rem at 100% 0%, var(--bg-glow), transparent 55%),
+    linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 55%, var(--bg-3) 100%);
+  background-attachment: fixed;
 }
 
-/* Drifting light blobs behind the glass */
-.ocean {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  pointer-events: none;
-}
-.ocean .blob {
-  position: absolute;
-  width: 55vmax;
-  height: 55vmax;
-  border-radius: 50%;
-  filter: blur(70px);
-  animation: drift 26s ease-in-out infinite alternate;
-}
-.ocean .blob.a { background: var(--blob-a); top: -20vmax; left: -15vmax; }
-.ocean .blob.b { background: var(--blob-b); bottom: -25vmax; right: -15vmax; animation-duration: 32s; animation-delay: -8s; }
-.ocean .blob.c { background: var(--blob-c); top: 30%; left: 35%; width: 40vmax; height: 40vmax; animation-duration: 38s; animation-delay: -16s; }
-
-/* A few soft bubbles rising */
-.ocean .bubble {
-  position: absolute;
-  bottom: -60px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, var(--glass-shine), transparent 60%), var(--glass-inset);
-  border: 1px solid var(--bubble-ring);
-  animation: rise linear infinite;
-  opacity: 0.55;
+/* Lined-paper option: a red margin line and faint blue rules. */
+[data-style='ledger'] body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(90deg, transparent 47px, var(--paper-margin) 47px, var(--paper-margin) 49px, transparent 49px),
+    repeating-linear-gradient(to bottom, transparent 0, transparent 31px, var(--paper-rule) 31px, var(--paper-rule) 32px);
+  background-attachment: scroll;
 }
 
-@keyframes drift {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(6vmax, 4vmax) scale(1.08); }
-  100% { transform: translate(-4vmax, 7vmax) scale(0.95); }
+h1,
+.brand,
+.serif {
+  font-family: Fraunces, Georgia, serif;
+  letter-spacing: -0.01em;
 }
-@keyframes rise {
-  0% { transform: translate(0, 0); opacity: 0; }
-  10% { opacity: 0.55; }
-  50% { transform: translate(18px, -55vh); }
-  100% { transform: translate(-12px, -115vh); opacity: 0; }
+h1 {
+  font-weight: 800;
 }
+
 @keyframes page-in {
   0% { opacity: 0; transform: translateY(12px); }
   100% { opacity: 1; transform: none; }
@@ -114,33 +97,28 @@ body {
 }
 
 @layer components {
-  /* Frosted glass panel with a specular top edge */
-  .glass {
-    background: var(--glass-bg);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
-    backdrop-filter: blur(22px) saturate(180%);
-    border: 1px solid var(--glass-border);
-    box-shadow: inset 0 1px 0 var(--glass-shine), inset 0 -1px 0 var(--glass-edge), var(--glass-shadow);
+  /* White card */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    box-shadow: var(--card-shadow);
   }
-  .glass-strong {
-    background: var(--glass-bg-strong);
-    -webkit-backdrop-filter: blur(26px) saturate(190%);
-    backdrop-filter: blur(26px) saturate(190%);
-    border: 1px solid var(--glass-border);
-    box-shadow: inset 0 1px 0 var(--glass-shine), var(--glass-shadow);
+  .card-strong {
+    background: var(--card-solid);
+    border: 1px solid var(--card-border);
+    box-shadow: var(--card-shadow);
   }
-  /* Recessed glass for inputs and inner wells */
-  .glass-inset {
-    background: var(--glass-inset);
-    border: 1px solid var(--glass-border);
-    box-shadow: inset 0 1px 3px var(--glass-edge);
+  /* Inputs, selects and outlined buttons */
+  .field {
+    background: var(--field-bg);
+    border: 1px solid var(--field-border);
   }
-  /* The glossy aqua bubble used for primary actions and active items */
-  .bubble-active {
-    background:
-      radial-gradient(120% 90% at 30% 0%, rgba(255, 255, 255, 0.55), transparent 55%),
-      linear-gradient(135deg, var(--bubble-from), var(--bubble-to));
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6), inset 0 -2px 6px rgba(0, 0, 0, 0.15), 0 6px 20px -6px var(--bubble-glow);
+  /* Primary actions and the active tab */
+  .pill-active {
+    background: var(--ink-green);
+  }
+  .pill-active:hover {
+    background: var(--ink-green-hover);
   }
   .pop-in {
     animation: pop-in 0.45s cubic-bezier(.34,1.56,.64,1) both;
@@ -168,107 +146,48 @@ body {
   }
 }
 
-/* Switching light/dark or style fades instead of flashing. */
+/* Switching light/dark or background fades instead of flashing. */
 body,
-.glass,
-.glass-strong,
-.glass-inset,
-.bubble-active {
+.card,
+.card-strong,
+.field,
+.pill-active {
   transition-property: background-color, border-color, color, box-shadow;
   transition-duration: 0.35s;
   transition-timing-function: ease;
 }
 
-/* The active-tab pill glides between tabs (declared after the fade rule so it wins). */
-.bubble-active.tab-indicator-animate {
+/* The active-tab pill: deep green with a gold ring, gliding between tabs. */
+.tab-indicator {
+  box-shadow: 0 0 0 2px var(--gold);
+}
+.pill-active.tab-indicator-animate {
   transition: left 0.45s cubic-bezier(.34,1.3,.64,1), top 0.45s cubic-bezier(.34,1.3,.64,1),
     width 0.45s cubic-bezier(.34,1.3,.64,1), height 0.45s cubic-bezier(.34,1.3,.64,1), background-color 0.35s ease;
 }
 
-/* ------------------------------------------------------------------
-   Classic ledger style — lined paper, white cards, serif headings,
-   deep-green pills. Reuses the same component classes as the glass
-   style, so every page switches without per-page changes.
-   ------------------------------------------------------------------ */
-:root[data-style='ledger'] {
-  --paper: #fbfaf5;
-  --paper-rule: rgba(59, 130, 246, 0.12);
-  --paper-margin: rgba(239, 68, 68, 0.22);
-  --card-bg: #ffffff;
-  --card-border: rgba(15, 23, 42, 0.1);
-  --field-border: rgba(15, 23, 42, 0.18);
-  --ink-green: #14532d;
-  --ink-green-hover: #166534;
+/* Textbook journal table: bordered header cells on a gray band. */
+.journal-table thead th {
+  background: rgb(var(--c-slate-400) / 0.12);
+  border: 1px solid rgb(var(--c-slate-900) / 0.55);
+  border-top-width: 2px;
 }
-:root[data-style='ledger'][data-theme='dark'] {
-  --paper: #11161d;
-  --paper-rule: rgba(147, 197, 253, 0.07);
-  --paper-margin: rgba(248, 113, 113, 0.16);
-  --card-bg: #18202a;
-  --card-border: rgba(226, 232, 240, 0.1);
-  --field-border: rgba(226, 232, 240, 0.18);
-  --ink-green: #15803d;
-  --ink-green-hover: #16a34a;
-}
-
-[data-style='ledger'] body {
-  background-color: var(--paper);
-  /* A red margin line and faint blue rules, like a sheet of notebook paper. */
-  background-image:
-    linear-gradient(90deg, transparent 47px, var(--paper-margin) 47px, var(--paper-margin) 49px, transparent 49px),
-    repeating-linear-gradient(to bottom, transparent 0, transparent 31px, var(--paper-rule) 31px, var(--paper-rule) 32px);
-  background-attachment: scroll;
-}
-[data-style='ledger'] .ocean {
-  display: none;
-}
-[data-style='ledger'] .glass,
-[data-style='ledger'] .glass-strong {
-  background: var(--card-bg);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  border: 1px solid var(--card-border);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 10px 28px -16px rgba(15, 23, 42, 0.18);
-}
-[data-style='ledger'] .glass-inset {
-  background: var(--card-bg);
-  border: 1px solid var(--field-border);
-  box-shadow: none;
-}
-[data-style='ledger'] .bubble-active {
-  background: var(--ink-green);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-}
-[data-style='ledger'] .bubble-active:hover {
-  background: var(--ink-green-hover);
-}
-[data-style='ledger'] h1,
-[data-style='ledger'] .journal-title,
-[data-style='ledger'] .brand {
-  font-family: Fraunces, Georgia, serif;
-  letter-spacing: -0.01em;
-}
-[data-style='ledger'] h1 {
-  font-weight: 800;
-}
+.journal-table thead th:first-child { border-left: 0; }
+.journal-table thead th:last-child { border-right: 0; }
 
 @media (prefers-reduced-motion: reduce) {
-  .ocean .blob, .ocean .bubble, .pop-in, .page-enter { animation: none !important; }
+  .pop-in, .page-enter { animation: none !important; }
   .tab-indicator-animate, .collapse-panel { transition: none !important; }
-  .ocean .bubble { display: none; }
 }
 
 @media print {
   @page { margin: 1.5cm; }
   :root { color-scheme: light; }
   body { background: white !important; }
-  .ocean { display: none; }
-  .glass, .glass-strong, .glass-inset {
+  .card, .card-strong, .field {
     background: white !important;
     box-shadow: none !important;
     border-color: #e2e8f0 !important;
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
   }
   .overflow-x-auto { overflow: visible !important; }
 }

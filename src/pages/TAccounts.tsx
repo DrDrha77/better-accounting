@@ -76,7 +76,7 @@ function Side({ items }: { items: TItem[] }) {
 
 function TChart({ t }: { t: TAccount }) {
   return (
-    <div className="glass pop-in break-inside-avoid rounded-[1.75rem] p-5">
+    <div className="card pop-in break-inside-avoid rounded-2xl p-5">
       <div className="border-b-2 border-slate-800 pb-1 text-center font-medium text-slate-900">
         {t.account.name}
         <span className="ml-1 text-xs font-normal text-slate-400">#{t.account.number}</span>

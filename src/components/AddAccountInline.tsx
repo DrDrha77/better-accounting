@@ -59,7 +59,7 @@ export function AddAccountInline({ type, onAdded }: { type: AccountType; onAdded
     );
 
   return (
-    <div className="glass-inset pop-in space-y-3 rounded-2xl p-3">
+    <div className="field pop-in space-y-3 rounded-2xl p-3">
       <div className="text-sm font-semibold text-slate-800">New {label} account</div>
       {suggestions.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
@@ -68,7 +68,7 @@ export function AddAccountInline({ type, onAdded }: { type: AccountType; onAdded
             <button
               key={s.name}
               type="button"
-              className="glass-inset rounded-full px-3 py-1 text-xs text-slate-700 transition-all duration-300 ease-bubble hover:scale-105 hover:text-cyan-800"
+              className="field rounded-full px-3 py-1 text-xs text-slate-700 transition-all duration-300 ease-bubble hover:scale-105 hover:text-cyan-800"
               onClick={() => submit(s.name, !!s.contra)}
             >
               {s.name}

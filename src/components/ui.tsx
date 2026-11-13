@@ -8,17 +8,17 @@ type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
 /** Pill-shaped "bubble" buttons with a springy press. */
 export function Button({ variant = 'secondary', className, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
   const styles: Record<Variant, string> = {
-    primary: 'bubble-active text-white hover:brightness-110 disabled:opacity-45 disabled:saturate-50',
-    secondary: 'glass-inset text-slate-700 hover:bg-white/40 disabled:text-slate-400',
-    danger: 'glass-inset text-red-600 hover:bg-red-500/10 disabled:text-red-300',
+    primary: 'pill-active text-white hover:brightness-110 disabled:opacity-45 disabled:saturate-50',
+    secondary: 'field text-slate-800 hover:bg-slate-500/5 disabled:text-slate-400',
+    danger: 'field border-red-300 text-red-700 hover:bg-red-500/10 disabled:opacity-40',
     ghost: 'text-slate-600 hover:bg-slate-500/10 disabled:text-slate-300',
   };
   return (
     <button
       type="button"
       className={cx(
-        'inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-300 ease-bubble',
-        'hover:scale-[1.04] active:scale-95 disabled:cursor-not-allowed disabled:hover:scale-100',
+        'inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200',
+        'active:scale-[0.97] disabled:cursor-not-allowed',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70',
         styles[variant],
         className,
@@ -29,14 +29,14 @@ export function Button({ variant = 'secondary', className, ...props }: ButtonHTM
 }
 
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cx('glass pop-in rounded-[1.75rem] print:rounded-none', className)}>{children}</div>;
+  return <div className={cx('card pop-in rounded-2xl print:rounded-none', className)}>{children}</div>;
 }
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{title}</h1>
+        <h1 className="text-3xl text-slate-900 sm:text-4xl">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2 print:hidden">{actions}</div>}
@@ -67,7 +67,7 @@ export function Field({ label, children, className }: { label: string; children:
 }
 
 export const inputClass =
-  'glass-inset w-full rounded-xl px-3 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:outline-none focus:ring-2 focus:ring-cyan-400/60 [&>optgroup]:bg-slate-50 [&>option]:bg-slate-50';
+  'field w-full rounded-xl px-3 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 transition focus:outline-none focus:ring-2 focus:ring-cyan-400/60 [&>optgroup]:bg-slate-50 [&>option]:bg-slate-50';
 
 export function AccountSelect({
   accounts,
@@ -104,7 +104,7 @@ export function AccountSelect({
 }
 
 export function EmptyState({ children }: { children: ReactNode }) {
-  return <div className="glass-inset rounded-[1.75rem] border-dashed p-8 text-center text-sm text-slate-500">{children}</div>;
+  return <div className="field rounded-2xl border-dashed p-8 text-center text-sm text-slate-500">{children}</div>;
 }
 
 export function ErrorList({ errors }: { errors: string[] }) {

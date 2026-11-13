@@ -24,9 +24,9 @@ const DARK_OVERRIDES = { slate: { 400: '400', 500: '300' } };
 // Light mode: secondary text one step darker than Tailwind's defaults, so it reads easily on paper and glass.
 const LIGHT_OVERRIDES = { slate: { 400: '500', 500: '600', 600: '700' } };
 
-/** In the classic ledger style the accent (the `cyan` palette) becomes a deep bookkeeping green. */
-const ledgerAccent = (dark) =>
-  Object.fromEntries(SHADES.map((s) => [`--c-cyan-${s}`, rgb(colors.green[dark ? INVERT[s] : s])]));
+/** The accent (the `cyan` palette in class names) is a deep bookkeeping green. */
+const greenAccent = (dark) =>
+  Object.fromEntries(SHADES.map((s) => [`--c-cyan-${s}`, rgb(colors.emerald[dark ? INVERT[s] : s])]));
 
 const vars = (dark) =>
   Object.fromEntries(
@@ -53,8 +53,8 @@ export default {
       addBase({
         ':root': vars(false),
         ':root[data-theme="dark"]': vars(true),
-        ':root[data-style="ledger"]': ledgerAccent(false),
-        ':root[data-style="ledger"][data-theme="dark"]': ledgerAccent(true),
+        ':root:root': greenAccent(false),
+        ':root:root[data-theme="dark"]': greenAccent(true),
       });
     }),
   ],

@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { todayISO } from '../engine/journal';
 import { parseAmount } from '../engine/money';
 import { useBooks } from '../store/useBooks';
+import { defaultEntryDate, useSettings } from '../store/useSettings';
 import { cx } from './format';
 import { AccountSelect, Button, ErrorList, Field, inputClass } from './ui';
 
 /** One debit, one credit, one amount: the fastest way to post a simple entry. */
 export function QuickPost() {
   const { accounts, addEntry } = useBooks();
-  const [date, setDate] = useState(todayISO());
+  const entryDate = useSettings((s) => s.entryDate);
+  const [date, setDate] = useState(() => defaultEntryDate(entryDate, todayISO()));
+  // Follow "Save for date" when it changes.
+  useEffect(() => setDate(defaultEntryDate(entryDate, todayISO())), [entryDate]);
   const [amount, setAmount] = useState('');
   const [debit, setDebit] = useState('');
   const [credit, setCredit] = useState('');
@@ -47,7 +51,7 @@ export function QuickPost() {
         post();
       }}
     >
-      <div className="text-base font-semibold text-slate-900">Quick post</div>
+      <div className="text-base font-semibold text-slate-900">Quick post (approved immediately)</div>
       <p className="text-sm text-slate-500">Debits one account, credits another — every statement updates.</p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-[10rem_9rem_1fr_1fr]">
         <Field label="Date">

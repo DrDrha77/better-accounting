@@ -3,13 +3,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import { EntryEditor } from '../components/EntryEditor';
 import { fmtDate, formatPlain } from '../components/format';
 import { QuickPost } from '../components/QuickPost';
+import { SaveForDate } from '../components/SaveForDate';
 import { ReportShell } from '../components/ReportShell';
 import { TransactionComposer } from '../components/TransactionComposer';
-import { Button, Card, EmptyState, Field, inputClass } from '../components/ui';
+import { Button, Card, Field, inputClass } from '../components/ui';
 import { centsToCsv } from '../engine/csv';
 import { entryNumberLabel, sortEntries } from '../engine/journal';
 import { filterEntries } from '../engine/ledger';
 import { useBooks } from '../store/useBooks';
+
+/** Toolbar buttons are a bit larger, like the rest of the Journal page. */
+const TOOL = 'px-5 py-2.5 text-[15px]';
 
 export function Journal() {
   const { accounts, entries, updateEntry, deleteEntry, clearJournal } = useBooks();
@@ -41,8 +45,8 @@ export function Journal() {
 
   return (
     <ReportShell
-      title="General Journal"
-      subtitle="Your main entry point. Post here and the Ledger, T-Accounts, Trial Balance, Income Statement and Balance Sheet all update from the same entries."
+      title="Journal"
+      subtitle="Post entries here. All statements update from the same books."
       csvName="general-journal.csv"
       csvRows={csvRows}
       filters={
@@ -53,9 +57,14 @@ export function Journal() {
           <Field label="To">
             <input type="date" className={inputClass} value={to} onChange={(e) => setTo(e.target.value)} />
           </Field>
-          <Button onClick={() => setShowComposer((s) => !s)}>{showComposer ? 'Hide composer' : 'Show composer'}</Button>
-          <Button onClick={() => navigate('/opening-balances')}>Opening balances</Button>
+          <Button className={TOOL} onClick={() => setShowComposer((s) => !s)}>
+            {showComposer ? 'Hide composer' : 'Show composer'}
+          </Button>
+          <Button className={TOOL} onClick={() => navigate('/opening-balances')}>
+            Opening balances
+          </Button>
           <Button
+            className={TOOL}
             onClick={() => {
               setShowComposer(true);
               setBlankDraft(Date.now());
@@ -63,7 +72,8 @@ export function Journal() {
           >
             Blank draft
           </Button>
-          <Button variant="danger" onClick={clear} disabled={!postedCount}>
+          <SaveForDate className={TOOL} />
+          <Button className={TOOL} variant="danger" onClick={clear} disabled={!postedCount}>
             Clear journal
           </Button>
         </>
@@ -84,32 +94,36 @@ export function Journal() {
         </div>
       </div>
 
-      <Card className="overflow-x-auto">
-        <div className="journal-title px-4 pt-4 text-center text-lg font-bold text-slate-900">General Journal</div>
-        {(from || to) && (
-          <div className="text-center text-xs text-slate-500">
-            {from ? fmtDate(from) : 'Beginning'} – {to ? fmtDate(to) : 'today'}
-          </div>
-        )}
-        {sorted.length === 0 ? (
-          <div className="p-4">
-            <EmptyState>
-              {entries.length ? 'No entries in this date range.' : 'No entries yet. Post above, or describe a transaction in plain English.'}
-            </EmptyState>
-          </div>
-        ) : (
-          <table className="journal-table mt-3 w-full min-w-[44rem] text-sm">
-            <thead className="border-y border-slate-400/40 text-left text-xs font-semibold text-slate-600">
+      <Card className="overflow-x-auto rounded-xl">
+        <div className="bg-slate-400/10 px-4 py-3.5 text-center text-lg font-bold text-slate-900">
+          General Journal
+          {(from || to) && (
+            <div className="text-xs font-normal text-slate-600">
+              {from ? fmtDate(from) : 'Beginning'} – {to ? fmtDate(to) : 'today'}
+            </div>
+          )}
+        </div>
+        <table className="journal-table w-full min-w-[44rem] text-sm">
+            <thead className="text-center text-sm font-bold text-slate-900">
               <tr>
-                <th className="w-28 px-4 py-2">Date</th>
-                <th className="px-4 py-2">Description</th>
-                <th className="w-16 px-2 py-2 text-center">PR</th>
-                <th className="w-32 px-4 py-2 text-right">Debit ($)</th>
-                <th className="w-32 px-4 py-2 text-right">Credit ($)</th>
-                <th className="w-28 px-4 py-2 print:hidden" />
+                <th className="w-[14%] px-4 py-3">Date</th>
+                <th className="px-4 py-3">Description</th>
+                <th className="w-[8%] px-2 py-3">PR</th>
+                <th className="w-[15%] px-4 py-3">Amount (Dr. $)</th>
+                <th className="w-[15%] px-4 py-3">Amount (Cr. $)</th>
+                <th className="w-24 px-2 py-3 print:hidden">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody>
+              {sorted.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-3 text-sm text-slate-600">
+                    {entries.length ? 'No entries in this date range.' : 'No entries yet. Post above, or describe a transaction in plain English.'}
+                  </td>
+                </tr>
+              )}
               {sorted.map((e) => (
                 <Fragment key={e.id}>
                   {e.lines.map((l, i) => (
@@ -179,8 +193,7 @@ export function Journal() {
                 </Fragment>
               ))}
             </tbody>
-          </table>
-        )}
+        </table>
       </Card>
     </ReportShell>
   );
