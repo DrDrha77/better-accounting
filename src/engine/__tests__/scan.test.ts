@@ -2,7 +2,7 @@ import { findBySystemKey, SYSTEM_KEYS as K } from '../accounts';
 import { emptyBooks } from '../books';
 import { ledgerFor } from '../ledger';
 import { buildClaudeScanRequest, scanWithClaude, type ClaudeClientLike } from '../parser/claudeParser';
-import { buildGeminiScanRequest, GEMINI_SCAN_SCHEMA, scanWithGemini, type GeminiClientLike } from '../parser/geminiParser';
+import { buildGeminiScanRequest, GEMINI_SCAN_API_VERSION, GEMINI_SCAN_SCHEMA, scanWithGemini, type GeminiClientLike } from '../parser/geminiParser';
 import { incomeStatement, openingStatement, trialBalance } from '../reports';
 import { applyScan, planScan, type ScanResult } from '../scan';
 
@@ -140,6 +140,8 @@ describe('scan a page: provider requests', () => {
     expect(req.input[0].text).toContain("Owner's Drawings (Equity, contra)");
     expect(req.response_format.schema).toBe(GEMINI_SCAN_SCHEMA);
     expect(req.store).toBe(false);
+    // Google only accepts image input on the v1beta Interactions API.
+    expect(GEMINI_SCAN_API_VERSION).toBe('v1beta');
 
     const client: GeminiClientLike = { interactions: { create: async () => ({ status: 'completed', output_text: JSON.stringify(RIDGEVIEW) }) } };
     const out = await scanWithGemini('k', image, accounts, '2026-11-13', client);

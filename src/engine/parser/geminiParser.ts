@@ -44,9 +44,9 @@ export function buildGeminiRequest(text: string, ctx: ParseContext) {
   };
 }
 
-async function defaultClient(apiKey: string): Promise<GeminiClientLike> {
+async function defaultClient(apiKey: string, apiVersion?: string): Promise<GeminiClientLike> {
   const { GoogleGenAI } = await import('@google/genai');
-  return new GoogleGenAI({ apiKey }) as unknown as GeminiClientLike;
+  return new GoogleGenAI({ apiKey, ...(apiVersion ? { apiVersion } : {}) }) as unknown as GeminiClientLike;
 }
 
 export class GeminiParser implements TransactionParser {
@@ -82,6 +82,12 @@ function geminiFailure(err: unknown): string {
   return describeError(err, 'Gemini');
 }
 
+/**
+ * Image input on the Interactions API is only available in v1beta (v1 answers 400 "The value
+ * 'image' is not supported for 'input[1].type' in v1"), so page scans use v1beta.
+ */
+export const GEMINI_SCAN_API_VERSION = 'v1beta';
+
 export const GEMINI_SCAN_SCHEMA: Record<string, unknown> = (() => {
   const { $schema: _ignored, ...schema } = z.toJSONSchema(ScanSchema) as Record<string, unknown>;
   return schema;
@@ -105,7 +111,7 @@ export function buildGeminiScanRequest(image: ScanImage, accounts: Account[], to
 /** Read a photo of an exercise/worksheet with Gemini. */
 export async function scanWithGemini(apiKey: string, image: ScanImage, accounts: Account[], today: string, client?: GeminiClientLike): Promise<ScanOutcome> {
   try {
-    const c = client ?? (await defaultClient(apiKey));
+    const c = client ?? (await defaultClient(apiKey, GEMINI_SCAN_API_VERSION));
     const res = await c.interactions.create(buildGeminiScanRequest(image, accounts, today));
     if (res.status && res.status !== 'completed') return { ok: false, reason: `Gemini didn't finish reading the page (status: ${res.status}). Try again.` };
     try {
