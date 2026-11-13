@@ -22,6 +22,10 @@ const themedColors = Object.fromEntries(
 // Muted grays need a bit more light than a straight inversion gives them on deep water.
 const DARK_OVERRIDES = { slate: { 400: '400', 500: '300' } };
 
+/** In the classic ledger style the accent (the `cyan` palette) becomes a deep bookkeeping green. */
+const ledgerAccent = (dark) =>
+  Object.fromEntries(SHADES.map((s) => [`--c-cyan-${s}`, rgb(colors.green[dark ? INVERT[s] : s])]));
+
 const vars = (dark) =>
   Object.fromEntries(
     THEMED.flatMap((name) =>
@@ -38,6 +42,7 @@ export default {
       transitionTimingFunction: { bubble: 'cubic-bezier(.34,1.56,.64,1)' },
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        serif: ['Fraunces', 'Georgia', 'serif'],
       },
     },
   },
@@ -46,6 +51,8 @@ export default {
       addBase({
         ':root': vars(false),
         ':root[data-theme="dark"]': vars(true),
+        ':root[data-style="ledger"]': ledgerAccent(false),
+        ':root[data-style="ledger"][data-theme="dark"]': ledgerAccent(true),
       });
     }),
   ],

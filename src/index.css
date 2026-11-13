@@ -143,6 +143,73 @@ body {
   }
 }
 
+/* ------------------------------------------------------------------
+   Classic ledger style — lined paper, white cards, serif headings,
+   deep-green pills. Reuses the same component classes as the glass
+   style, so every page switches without per-page changes.
+   ------------------------------------------------------------------ */
+:root[data-style='ledger'] {
+  --paper: #fbfaf5;
+  --paper-rule: rgba(59, 130, 246, 0.12);
+  --paper-margin: rgba(239, 68, 68, 0.22);
+  --card-bg: #ffffff;
+  --card-border: rgba(15, 23, 42, 0.1);
+  --field-border: rgba(15, 23, 42, 0.18);
+  --ink-green: #14532d;
+  --ink-green-hover: #166534;
+}
+:root[data-style='ledger'][data-theme='dark'] {
+  --paper: #11161d;
+  --paper-rule: rgba(147, 197, 253, 0.07);
+  --paper-margin: rgba(248, 113, 113, 0.16);
+  --card-bg: #18202a;
+  --card-border: rgba(226, 232, 240, 0.1);
+  --field-border: rgba(226, 232, 240, 0.18);
+  --ink-green: #15803d;
+  --ink-green-hover: #16a34a;
+}
+
+[data-style='ledger'] body {
+  background-color: var(--paper);
+  /* A red margin line and faint blue rules, like a sheet of notebook paper. */
+  background-image:
+    linear-gradient(90deg, transparent 47px, var(--paper-margin) 47px, var(--paper-margin) 49px, transparent 49px),
+    repeating-linear-gradient(to bottom, transparent 0, transparent 31px, var(--paper-rule) 31px, var(--paper-rule) 32px);
+  background-attachment: scroll;
+}
+[data-style='ledger'] .ocean {
+  display: none;
+}
+[data-style='ledger'] .glass,
+[data-style='ledger'] .glass-strong {
+  background: var(--card-bg);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 10px 28px -16px rgba(15, 23, 42, 0.18);
+}
+[data-style='ledger'] .glass-inset {
+  background: var(--card-bg);
+  border: 1px solid var(--field-border);
+  box-shadow: none;
+}
+[data-style='ledger'] .bubble-active {
+  background: var(--ink-green);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+[data-style='ledger'] .bubble-active:hover {
+  background: var(--ink-green-hover);
+}
+[data-style='ledger'] h1,
+[data-style='ledger'] .journal-title,
+[data-style='ledger'] .brand {
+  font-family: Fraunces, Georgia, serif;
+  letter-spacing: -0.01em;
+}
+[data-style='ledger'] h1 {
+  font-weight: 800;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ocean .blob, .ocean .bubble, .pop-in { animation: none !important; }
   .ocean .bubble { display: none; }

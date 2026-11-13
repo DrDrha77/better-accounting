@@ -4,6 +4,10 @@ import { useSettings } from '../store/useSettings';
 /** Applies the theme preference to <html data-theme> and follows the device when set to "system". */
 export function useApplyTheme() {
   const pref = useSettings((s) => s.theme);
+  const style = useSettings((s) => s.style);
+  useEffect(() => {
+    document.documentElement.dataset.style = style;
+  }, [style]);
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const apply = () => {

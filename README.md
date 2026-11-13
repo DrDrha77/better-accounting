@@ -2,7 +2,13 @@
 
 Type business transactions in plain English ("Owner invested $40,000 into the business") and get a balanced double-entry journal entry. Every record (journal, general ledger, T-accounts, trial balance, income statement, balance sheet, statement of owner's equity, opening statement) is derived live from the journal.
 
-No backend: data is kept in your browser's localStorage. The look is "liquid glass" over a deep-ocean background, with light and dark themes (switch in the sidebar or Settings; defaults to your device).
+No backend: data is kept in your browser's localStorage.
+
+Two looks, switchable in **Settings → Appearance** (each with light and dark):
+- **Classic ledger** (default): lined-paper background, serif headings, deep-green pill tabs across the top with a "More" menu.
+- **Liquid glass**: frosted glass over a deep-ocean background, with a sidebar.
+
+The **Journal** page is the main entry point: type a transaction in plain English, use **Quick post** (date, amount, debit account, credit account), or open a **Blank draft** for multi-line entries. It shows a textbook journal (Date, Description, PR, Debit, Credit) with a date filter and a **Clear journal** button that keeps your accounts and opening balances.
 
 ## Run it
 

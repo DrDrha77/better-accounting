@@ -151,3 +151,16 @@ describe('sample data', () => {
     expect(b.entries[0].kind).toBe('opening');
   });
 });
+
+describe('clear journal', () => {
+  it('removes every entry except the opening balance and keeps accounts', async () => {
+    const { clearJournal } = await import('../books');
+    const b = buildSampleBooks(0);
+    const r = clearJournal(b);
+    if (!r.ok) throw new Error();
+    expect(r.books.entries).toHaveLength(1);
+    expect(r.books.entries[0].kind).toBe('opening');
+    expect(r.books.accounts).toEqual(b.accounts);
+    expect(trialBalance(r.books.accounts, r.books.entries).balanced).toBe(true);
+  });
+});
