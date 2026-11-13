@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import { ACCOUNT_TYPES, accountLabel, sortAccounts, TYPE_LABELS } from '../engine/accounts';
+import { ACCOUNT_TYPES, sortAccounts, TYPE_LABELS } from '../engine/accounts';
 import type { Account } from '../engine/types';
 import { cx } from './format';
 
@@ -94,7 +94,7 @@ export function AccountSelect({
             .filter((a) => a.type === t)
             .map((a) => (
               <option key={a.id} value={a.id}>
-                {accountLabel(a)}
+                {a.name}
               </option>
             ))}
         </optgroup>
