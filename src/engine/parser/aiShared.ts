@@ -96,16 +96,56 @@ export function parseAiJson(raw: string | undefined | null): AiEntry | null {
   }
 }
 
-/** Plain-language message for an API/network failure. */
+/**
+ * The provider's own explanation from an SDK error, e.g. "UNAVAILABLE: The model is overloaded."
+ * Both SDKs keep the parsed response body on `error` (Google wraps it in an array) and the raw
+ * text on `body`/`message`. Never contains the API key.
+ */
+export function providerErrorDetail(err: unknown): string {
+  const pick = (v: unknown, depth = 0): string | undefined => {
+    if (!v || depth > 4) return undefined;
+    if (Array.isArray(v)) return pick(v[0], depth + 1);
+    if (typeof v !== 'object') return undefined;
+    const o = v as Record<string, unknown>;
+    const inner = pick(o.error, depth + 1);
+    if (inner) return inner;
+    if (typeof o.message === 'string' && o.message.trim()) {
+      const code = typeof o.status === 'string' ? o.status : typeof o.type === 'string' ? o.type : '';
+      return code ? `${code}: ${o.message}` : o.message;
+    }
+    return undefined;
+  };
+  const e = err as { error?: unknown; body?: unknown; message?: unknown };
+  let detail = pick(e?.error);
+  if (!detail && typeof e?.body === 'string') {
+    try {
+      detail = pick(JSON.parse(e.body));
+    } catch {
+      // not JSON; fall through to the text search below
+    }
+  }
+  if (!detail) {
+    const raw = `${typeof e?.body === 'string' ? e.body : ''} ${typeof e?.message === 'string' ? e.message : ''}`;
+    detail = raw.match(/"message"\s*:\s*"((?:[^"\\]|\\.){1,400})"/)?.[1];
+  }
+  return detail ? detail.replace(/\s+/g, ' ').trim().slice(0, 300) : '';
+}
+
+/** Plain-language message for an API/network failure, plus the provider's own words when available. */
 export function describeError(err: unknown, providerName: string): string {
   const status = (err as { status?: number })?.status;
   const message = String((err as Error)?.message ?? '');
-  if (status === 401 || /api[ _-]?key/i.test(message)) return `Your ${providerName} API key was rejected. Check it in Settings.`;
-  if (status === 403) return `Your ${providerName} API key isn't allowed to use this model. Check the key's restrictions.`;
-  if (status === 429) return `${providerName} is rate-limiting this key right now (or its quota is used up). Try again in a moment.`;
-  if (status === 400) return `${providerName} rejected the request (400). Your account may not have access to the model.`;
-  if (typeof status === 'number' && status >= 500) return `${providerName} is busy or unavailable. Try again shortly.`;
+  const detail = providerErrorDetail(err);
+  const said = detail ? ` ${providerName} said: “${detail}”` : '';
+  const code = typeof status === 'number' ? ` (error ${status})` : '';
+  if (status === 401 || /api[ _-]?key/i.test(`${message} ${detail}`)) return `Your ${providerName} API key was rejected. Check it in Settings.${said}`;
+  if (status === 403) return `Your ${providerName} API key isn't allowed to use this model. Check the key's restrictions.${said}`;
+  if (status === 429) return `${providerName} is rate-limiting this key right now (or its quota is used up). Try again in a moment.${said}`;
+  if (status === 404) return `${providerName} couldn't find the model this app uses${code}. Your key may not have access to it.${said}`;
+  if (status === 400) return `${providerName} rejected the request${code}.${said || ' Your account may not have access to the model.'}`;
+  if (typeof status === 'number' && status >= 500)
+    return `${providerName} had a server problem${code} and still failed after retrying. Try again in a few minutes.${said}`;
   if (err instanceof TypeError || (err as { name?: string })?.name === 'APIConnectionError')
     return `Couldn't reach ${providerName}. Check your internet connection.`;
-  return `The ${providerName} request failed: ${message || 'unknown error'}`;
+  return `The ${providerName} request failed: ${detail || message || 'unknown error'}`;
 }
