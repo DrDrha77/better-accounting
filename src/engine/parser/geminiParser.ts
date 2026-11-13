@@ -5,7 +5,7 @@
  * as the Claude parser (see aiShared.ts); the model only proposes, the user confirms.
  */
 import { z } from 'zod';
-import { AiEntrySchema, buildUserMessage, describeError, parseAiJson, SYSTEM_PROMPT, toParseResult } from './aiShared';
+import { AiEntrySchema, buildUserMessage, describeError, parseAiJson, providerErrorDetail, SYSTEM_PROMPT, toParseResult } from './aiShared';
 import type { ParseContext, ParseResult, TransactionParser } from './types';
 
 /** Gemini's current general-purpose model; has a free tier in Google AI Studio. */
@@ -65,8 +65,8 @@ export class GeminiParser implements TransactionParser {
       if (!out) return { status: 'unmatched', source: 'ai', reason: "The AI's reply couldn't be read. Try rephrasing." };
       return toParseResult(out, text, ctx);
     } catch (err) {
-      // Google answers an invalid key with 400 API_KEY_INVALID, but the SDK's error drops that detail.
-      if ((err as { status?: number })?.status === 400)
+      // An invalid key comes back as 400 API_KEY_INVALID; without any detail, a 400 is almost always the key.
+      if ((err as { status?: number })?.status === 400 && !providerErrorDetail(err))
         return {
           status: 'unmatched',
           source: 'ai',
