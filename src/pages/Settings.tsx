@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { OpeningBalancesCard } from '../components/OpeningBalancesCard';
 import { cx, fmtDate, formatCents } from '../components/format';
 import { Button, Card, ErrorList, Field, inputClass, PageHeader } from '../components/ui';
 import { lazyAiParser } from '../components/useTransactionParser';
@@ -211,9 +212,9 @@ function OpeningStatementCard() {
     <Card className="p-5 sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <SectionTitle>Opening statement</SectionTitle>
-        <Link to="/opening-balances" className="text-sm font-medium text-cyan-700 hover:underline">
-          {os ? 'Edit opening balances →' : 'Enter opening balances →'}
-        </Link>
+        <a href="#/settings" onClick={(e) => { e.preventDefault(); document.getElementById('opening-balances')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-sm font-medium text-cyan-700 hover:underline">
+          {os ? 'Edit opening balances ↑' : 'Enter opening balances ↑'}
+        </a>
       </div>
       <p className="mt-1 text-sm text-slate-600">The position you started the books with, before any transactions.</p>
       <div className="mt-4">
@@ -427,11 +428,21 @@ function BooksCard() {
 }
 
 export function Settings() {
+  const location = useLocation();
+  const openingRef = useRef<HTMLDivElement>(null);
+  // Arriving from the Journal's "Opening balances" button scrolls straight to that section.
+  useEffect(() => {
+    if ((location.state as { scrollTo?: string } | null)?.scrollTo !== 'opening-balances') return;
+    const t = setTimeout(() => openingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+    return () => clearTimeout(t);
+  }, [location.state]);
+
   return (
     <div className="space-y-4">
       <PageHeader title="Settings" />
       <CompanyCard />
       <ChartOfAccountsCard />
+      <OpeningBalancesCard ref={openingRef} />
       <OpeningStatementCard />
       <AiCard />
       <AppearanceCard />

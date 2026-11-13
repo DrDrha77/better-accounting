@@ -6,7 +6,7 @@
 import { DEFAULT_ACCOUNTS, typeForNumber } from './accounts';
 import { newId, validateEntry } from './journal';
 import { accountHasActivity } from './ledger';
-import { OPENING_DESCRIPTION, openingLines, validateOpening, type OpeningBalanceInput } from './opening';
+import { openingDescription, openingLines, validateOpening, type OpeningBalanceInput } from './opening';
 import type { Account, AccountType, Books, EntryDraft, JournalEntry } from './types';
 
 export type Result = { ok: true; books: Books; id?: string } | { ok: false; errors: string[] };
@@ -59,7 +59,7 @@ export function saveOpening(books: Books, input: OpeningBalanceInput, now = Date
     id: existing?.id ?? newId(),
     seq: 0,
     date: input.date,
-    description: OPENING_DESCRIPTION,
+    description: openingDescription(input),
     lines: openingLines(input),
     kind: 'opening',
     createdAt: existing?.createdAt ?? now,

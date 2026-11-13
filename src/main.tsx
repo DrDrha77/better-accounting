@@ -7,7 +7,6 @@ import { BalanceSheet } from './pages/BalanceSheet';
 import { IncomeStatement } from './pages/IncomeStatement';
 import { Journal } from './pages/Journal';
 import { Ledger } from './pages/Ledger';
-import { OpeningBalances } from './pages/OpeningBalances';
 import { Settings } from './pages/Settings';
 import { TAccounts } from './pages/TAccounts';
 import { TrialBalance } from './pages/TrialBalance';
@@ -25,8 +24,8 @@ const router = createHashRouter([
       { path: '/balance-sheet', element: <BalanceSheet /> },
       { path: '/income-statement', element: <IncomeStatement /> },
       { path: '/settings', element: <Settings /> },
-      // Reached from the Journal's "Opening balances" button.
-      { path: '/opening-balances', element: <OpeningBalances /> },
+      // Opening balances now live in Settings.
+      { path: '/opening-balances', element: <Navigate to="/settings" state={{ scrollTo: 'opening-balances' }} replace /> },
       // Pages that moved into Settings.
       { path: '/accounts', element: <Navigate to="/settings" replace /> },
       { path: '/opening-statement', element: <Navigate to="/settings" replace /> },

@@ -18,6 +18,8 @@ interface SettingsState {
   companyName: string;
   /** Default date for new entries ("Save for date"); empty means today. */
   entryDate: string;
+  /** Start of the reporting period (Journal and Income Statement "From"); empty means from the beginning. */
+  periodFrom: string;
   setProvider(p: AiProvider): void;
   setApiKey(p: AiProvider, key: string): void;
   setAiMode(mode: AiMode): void;
@@ -25,9 +27,10 @@ interface SettingsState {
   setStyle(style: StylePref): void;
   setCompanyName(name: string): void;
   setEntryDate(date: string): void;
+  setPeriodFrom(date: string): void;
 }
 
-type Persisted = Pick<SettingsState, 'aiProvider' | 'apiKeys' | 'aiMode' | 'theme' | 'style' | 'companyName' | 'entryDate'>;
+type Persisted = Pick<SettingsState, 'aiProvider' | 'apiKeys' | 'aiMode' | 'theme' | 'style' | 'companyName' | 'entryDate' | 'periodFrom'>;
 
 export const useSettings = create<SettingsState>()(
   persist(
@@ -39,6 +42,7 @@ export const useSettings = create<SettingsState>()(
       style: 'gradient',
       companyName: '',
       entryDate: '',
+      periodFrom: '',
       setProvider: (aiProvider) => set({ aiProvider }),
       setApiKey: (p, key) => set((s) => ({ apiKeys: { ...s.apiKeys, [p]: key.trim() } })),
       setAiMode: (aiMode) => set({ aiMode }),
@@ -46,6 +50,7 @@ export const useSettings = create<SettingsState>()(
       setStyle: (style) => set({ style }),
       setCompanyName: (companyName) => set({ companyName: companyName.trim() }),
       setEntryDate: (entryDate) => set({ entryDate }),
+      setPeriodFrom: (periodFrom) => set({ periodFrom }),
     }),
     {
       name: 'better-accounting:settings',
@@ -59,6 +64,7 @@ export const useSettings = create<SettingsState>()(
         style: s.style,
         companyName: s.companyName,
         entryDate: s.entryDate,
+        periodFrom: s.periodFrom,
       }),
       // v1: a single Anthropic key. v3: style was "ledger"/"glass". v4: "gradient" (new default) or "ledger".
       migrate: (persisted, version) => {
@@ -77,6 +83,7 @@ export const useSettings = create<SettingsState>()(
           style: version < 4 ? 'gradient' : p.style === 'ledger' ? 'ledger' : 'gradient',
           companyName: p.companyName ?? '',
           entryDate: p.entryDate ?? '',
+          periodFrom: p.periodFrom ?? '',
         } as Persisted;
       },
     },

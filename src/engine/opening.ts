@@ -11,9 +11,15 @@ export interface OpeningBalanceLine {
 export interface OpeningBalanceInput {
   date: ISODate;
   lines: OpeningBalanceLine[];
+  /** Journal description for the opening entry (the "Memo"). Defaults to OPENING_DESCRIPTION. */
+  description?: string;
 }
 
 export const OPENING_DESCRIPTION = 'Opening Balance';
+
+export function openingDescription(input: OpeningBalanceInput): string {
+  return input.description?.trim() || OPENING_DESCRIPTION;
+}
 
 export function openingTotals(input: OpeningBalanceInput): { debit: Cents; credit: Cents; difference: Cents } {
   let debit = 0;
@@ -41,7 +47,7 @@ export function openingLines(input: OpeningBalanceInput): JournalLine[] {
 }
 
 export function validateOpening(input: OpeningBalanceInput, accounts: Account[]): ValidationResult {
-  const result = validateEntry({ date: input.date, description: OPENING_DESCRIPTION, lines: openingLines(input) }, accounts);
+  const result = validateEntry({ date: input.date, description: openingDescription(input), lines: openingLines(input) }, accounts);
   const { difference } = openingTotals(input);
   if (difference !== 0 && !result.errors.includes('Debits must equal credits.')) {
     result.errors.push('Debits must equal credits.');
@@ -74,6 +80,7 @@ export function plugToOpeningBalanceEquity(input: OpeningBalanceInput, accounts:
 export function entryToOpeningInput(entry: JournalEntry): OpeningBalanceInput {
   return {
     date: entry.date,
+    description: entry.description,
     lines: entry.lines.map((l) => ({
       accountId: l.accountId,
       side: l.debit > 0 ? ('debit' as const) : ('credit' as const),

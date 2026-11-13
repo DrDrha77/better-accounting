@@ -107,3 +107,14 @@ describe('opening balance flow', () => {
     expect(removed.ok && openingStatement(removed.books.accounts, removed.books.entries)).toBeNull();
   });
 });
+
+describe('opening balance memo', () => {
+  it('uses the memo as the journal description, defaulting to "Opening Balance"', () => {
+    const withMemo = saveOpening(emptyBooks(), { ...balanced, description: 'Balances carried over from 2025' });
+    expect(withMemo.ok && withMemo.books.entries[0].description).toBe('Balances carried over from 2025');
+    const blank = saveOpening(emptyBooks(), { ...balanced, description: '   ' });
+    expect(blank.ok && blank.books.entries[0].description).toBe('Opening Balance');
+    if (!withMemo.ok) throw new Error();
+    expect(entryToOpeningInput(withMemo.books.entries[0]).description).toBe('Balances carried over from 2025');
+  });
+});
