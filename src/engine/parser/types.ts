@@ -41,3 +41,11 @@ export interface TransactionParser {
   readonly name: string;
   parse(text: string, ctx: ParseContext): Promise<ParseResult>;
 }
+
+/** A photo to scan, base64-encoded without the data: prefix. */
+export interface ScanImage {
+  data: string;
+  mimeType: string;
+}
+
+export type ScanOutcome = { ok: true; scan: import('../scan').ScanResult } | { ok: false; reason: string };

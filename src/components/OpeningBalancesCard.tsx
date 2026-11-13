@@ -1,9 +1,11 @@
 import { forwardRef, useMemo, useState } from 'react';
 import { ACCOUNT_TYPES, findBySystemKey, normalSide, sortAccounts, SYSTEM_KEYS } from '../engine/accounts';
 import { todayISO } from '../engine/journal';
-import { parseAmount } from '../engine/money';
+import { parseSignedAmount } from '../engine/money';
 import { OPENING_DESCRIPTION, plugToOpeningBalanceEquity, type OpeningBalanceInput, type OpeningBalanceLine } from '../engine/opening';
 import type { Account, AccountType, Cents } from '../engine/types';
+
+export { parseSignedAmount };
 import { useBooks } from '../store/useBooks';
 import { useSettings } from '../store/useSettings';
 import { cx, fmtDate, formatCents, formatPlain } from './format';
@@ -16,18 +18,6 @@ const SECTION_LABELS: Record<AccountType, string> = {
   revenue: 'Revenue',
   expense: 'Expenses',
 };
-
-/**
- * Parse an amount typed on an account's normal side. A leading minus (or brackets) means the
- * balance is on the other side, e.g. an overdrawn bank account. Returns signed cents or null.
- */
-export function parseSignedAmount(text: string): Cents | null {
-  const t = text.trim();
-  if (!t) return 0;
-  const negative = /^-|^\(.*\)$/.test(t);
-  const cents = parseAmount(t.replace(/^-\s*/, '').replace(/^\((.*)\)$/, '$1'));
-  return cents === null ? null : negative ? -cents : cents;
-}
 
 /** Signed cents (normal side positive) → opening line on the right side. */
 function toLine(account: Account, signed: Cents): OpeningBalanceLine | null {

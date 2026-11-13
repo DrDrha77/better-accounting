@@ -1,4 +1,4 @@
-import { parseSignedAmount } from '../../components/OpeningBalancesCard';
+import { parseSignedAmount } from '../money';
 
 describe('opening balance amounts', () => {
   it.each([

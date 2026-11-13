@@ -6,7 +6,9 @@
  */
 import { z } from 'zod';
 import { AiEntrySchema, buildUserMessage, describeError, parseAiJson, providerErrorDetail, SYSTEM_PROMPT, toParseResult } from './aiShared';
-import type { ParseContext, ParseResult, TransactionParser } from './types';
+import { buildScanText, SCAN_PROMPT, ScanSchema } from '../scan';
+import type { Account } from '../types';
+import type { ParseContext, ParseResult, ScanImage, ScanOutcome, TransactionParser } from './types';
 
 /** Gemini's current general-purpose model; has a free tier in Google AI Studio. */
 export const GEMINI_MODEL = 'gemini-3.8-flash';
@@ -65,14 +67,55 @@ export class GeminiParser implements TransactionParser {
       if (!out) return { status: 'unmatched', source: 'ai', reason: "The AI's reply couldn't be read. Try rephrasing." };
       return toParseResult(out, text, ctx);
     } catch (err) {
-      // An invalid key comes back as 400 API_KEY_INVALID; without any detail, a 400 is almost always the key.
-      if ((err as { status?: number })?.status === 400 && !providerErrorDetail(err))
-        return {
-          status: 'unmatched',
-          source: 'ai',
-          reason: "Gemini rejected the request. Usually this means the API key isn't valid or isn't enabled for the Gemini API — check it in Settings.",
-        };
-      return { status: 'unmatched', source: 'ai', reason: describeError(err, 'Gemini') };
+      return { status: 'unmatched', source: 'ai', reason: geminiFailure(err) };
     }
+  }
+}
+
+// ---------------------------------------------------------------- scanning a page
+
+/** Why a Gemini call failed, in plain words. */
+function geminiFailure(err: unknown): string {
+  // An invalid key comes back as 400 API_KEY_INVALID; without any detail, a 400 is almost always the key.
+  if ((err as { status?: number })?.status === 400 && !providerErrorDetail(err))
+    return "Gemini rejected the request. Usually this means the API key isn't valid or isn't enabled for the Gemini API — check it in Settings.";
+  return describeError(err, 'Gemini');
+}
+
+export const GEMINI_SCAN_SCHEMA: Record<string, unknown> = (() => {
+  const { $schema: _ignored, ...schema } = z.toJSONSchema(ScanSchema) as Record<string, unknown>;
+  return schema;
+})();
+
+export function buildGeminiScanRequest(image: ScanImage, accounts: Account[], today: string) {
+  return {
+    model: GEMINI_MODEL,
+    system_instruction: SCAN_PROMPT,
+    input: [
+      { type: 'text', text: buildScanText(accounts, today) },
+      { type: 'image', data: image.data, mime_type: image.mimeType },
+    ],
+    response_format: { type: 'text', mime_type: 'application/json', schema: GEMINI_SCAN_SCHEMA },
+    // Journalizing a whole page is real work: give it more thinking and room for a long answer.
+    generation_config: { thinking_level: 'medium', max_output_tokens: 32000 },
+    store: false,
+  };
+}
+
+/** Read a photo of an exercise/worksheet with Gemini. */
+export async function scanWithGemini(apiKey: string, image: ScanImage, accounts: Account[], today: string, client?: GeminiClientLike): Promise<ScanOutcome> {
+  try {
+    const c = client ?? (await defaultClient(apiKey));
+    const res = await c.interactions.create(buildGeminiScanRequest(image, accounts, today));
+    if (res.status && res.status !== 'completed') return { ok: false, reason: `Gemini didn't finish reading the page (status: ${res.status}). Try again.` };
+    try {
+      const parsed = ScanSchema.safeParse(JSON.parse(res.output_text ?? ''));
+      if (parsed.success) return { ok: true, scan: parsed.data };
+    } catch {
+      // fall through
+    }
+    return { ok: false, reason: "The AI's answer couldn't be read. Try again, or use a clearer photo." };
+  } catch (err) {
+    return { ok: false, reason: geminiFailure(err) };
   }
 }
