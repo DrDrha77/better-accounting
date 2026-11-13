@@ -1,6 +1,6 @@
 # Better Accounting
 
-Type business transactions in plain English ("Owner invested $40,000 into the business") and get a balanced double-entry journal entry. Every record (journal, general ledger, T-accounts, trial balance, income statement, balance sheet, statement of owner's equity, opening statement) is derived live from the journal.
+Type business transactions in plain English ("Owner invested $40,000 into the business") and get a balanced double-entry journal entry. Every record (journal, general ledger, T-accounts, trial balance, income statement, balance sheet, opening statement) is derived live from the journal.
 
 No backend: data is kept in your browser's localStorage.
 
