@@ -110,3 +110,5 @@ The app also runs as a desktop app (Electron). It works fully offline and keeps 
 Build locally: `npm run dist:mac` or `npm run dist:win` (output in `release/`). To publish both installers, push a tag like `v0.1.0`; GitHub Actions (`.github/workflows/desktop.yml`) builds them and attaches them to a Release.
 
 **Updates:** Windows downloads new versions automatically and offers a restart. Mac (unsigned) shows a "new version available" prompt that opens the Releases page. Signing with an Apple Developer account would allow automatic Mac updates too.
+
+**Customization (Settings):** tabs on top or on a left side bar, text size, spacing (comfortable/compact), accent color, which tabs show, and which page the app opens on. These apply to every company and are not part of backups.

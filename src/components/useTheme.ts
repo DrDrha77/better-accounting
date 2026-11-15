@@ -6,6 +6,15 @@ export function useApplyTheme() {
   const pref = useSettings((s) => s.theme);
   const style = useSettings((s) => s.style);
   const design = useSettings((s) => s.design);
+  const textSize = useSettings((s) => s.textSize);
+  const accent = useSettings((s) => s.accent);
+  const density = useSettings((s) => s.density);
+  useEffect(() => {
+    const d = document.documentElement.dataset;
+    d.text = textSize;
+    d.accent = accent;
+    d.density = density;
+  }, [textSize, accent, density]);
   useEffect(() => {
     document.documentElement.dataset.style = style;
   }, [style]);

@@ -58,6 +58,17 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Text size: scales the whole page, including the pixel-sized labels. */
+html[data-text='sm'] body { zoom: 0.92; }
+html[data-text='lg'] body { zoom: 1.12; }
+html[data-text='xl'] body { zoom: 1.25; }
+
+/* Compact density: tighter table rows and page padding so more fits on screen. */
+html[data-density='compact'] table td,
+html[data-density='compact'] table th { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+html[data-density='compact'] main { padding-top: 1rem; }
+html[data-density='compact'] .page-head { margin-bottom: 0.9rem; }
+
 body {
   @apply text-slate-900;
   background-color: var(--bg-2);
@@ -359,3 +370,13 @@ html[data-design='apple'] body {
   }
   .overflow-x-auto { overflow: visible !important; }
 }
+
+/* Accent color choices: buttons and the active tab follow it (after the design rules so they win). */
+html:root[data-accent='blue'][data-theme='light'] { --ink-green: #1d4ed8; --ink-green-hover: #2563eb; }
+html:root[data-accent='blue'][data-theme='dark'] { --ink-green: #2563eb; --ink-green-hover: #3b82f6; }
+html:root[data-accent='purple'][data-theme='light'] { --ink-green: #6d28d9; --ink-green-hover: #7c3aed; }
+html:root[data-accent='purple'][data-theme='dark'] { --ink-green: #7c3aed; --ink-green-hover: #8b5cf6; }
+html:root[data-accent='orange'][data-theme='light'] { --ink-green: #c2410c; --ink-green-hover: #ea580c; }
+html:root[data-accent='orange'][data-theme='dark'] { --ink-green: #ea580c; --ink-green-hover: #f97316; }
+html:root[data-accent='pink'][data-theme='light'] { --ink-green: #be185d; --ink-green-hover: #db2777; }
+html:root[data-accent='pink'][data-theme='dark'] { --ink-green: #db2777; --ink-green-hover: #ec4899; }
