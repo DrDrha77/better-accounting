@@ -23,6 +23,12 @@
           style = stored.version >= 4 && saved.style === 'ledger' ? 'ledger' : 'gradient';
           design = saved.design === 'apple' ? 'apple' : 'classic';
         } catch (e) {}
+        try {
+          var d = document.documentElement.dataset;
+          d.text = saved.textSize || 'md';
+          d.accent = saved.accent || 'default';
+          d.density = saved.density || 'comfortable';
+        } catch (e) {}
         document.documentElement.dataset.style = style;
         document.documentElement.dataset.design = design;
         // Load only the fonts the chosen design uses (the app loads the other set if you switch).

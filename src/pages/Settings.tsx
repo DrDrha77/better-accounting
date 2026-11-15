@@ -17,7 +17,8 @@ import { useBooks } from '../store/useBooks';
 import { useCompany } from '../store/useCompany';
 import { useCompanies, useCompanyName } from '../store/useCompanies';
 import { useSaveStatus } from '../store/safeStorage';
-import { useSettings, type DesignPref, type StylePref, type ThemePref } from '../store/useSettings';
+import { useSettings, type AccentPref, type DesignPref, type StylePref, type ThemePref } from '../store/useSettings';
+import { ALL_TABS } from '../components/Layout';
 import { backupFilename, makeBackup, parseBackup } from '../engine/backup';
 import { BalanceSheetBody } from './BalanceSheet';
 
@@ -477,6 +478,120 @@ function AiCard() {
 
 // ---------------------------------------------------------------- Appearance & books
 
+const ACCENT_CHOICES: { value: AccentPref; label: string; swatch: string }[] = [
+  { value: 'default', label: 'Default', swatch: '#12795c' },
+  { value: 'blue', label: 'Blue', swatch: '#2563eb' },
+  { value: 'purple', label: 'Purple', swatch: '#7c3aed' },
+  { value: 'orange', label: 'Orange', swatch: '#ea580c' },
+  { value: 'pink', label: 'Pink', swatch: '#db2777' },
+];
+
+function LayoutCard() {
+  const { tabPosition, textSize, accent, density, hiddenTabs, startPage, setTabPosition, setTextSize, setAccent, setDensity, setTabHidden, setStartPage } =
+    useSettings();
+  const shown = ALL_TABS.filter((t) => t.to === '/settings' || !hiddenTabs.includes(t.to));
+  return (
+    <Card className="p-5 sm:p-6">
+      <SectionTitle>Layout and tabs</SectionTitle>
+      <div className="mt-3 flex flex-wrap gap-x-10 gap-y-5">
+        <div>
+          <div className="mb-2 text-sm font-medium text-slate-600">Tabs go</div>
+          <Segmented
+            label="Tab position"
+            value={tabPosition}
+            onChange={setTabPosition}
+            options={[
+              { value: 'top', label: 'On top' },
+              { value: 'side', label: 'On the side' },
+            ]}
+          />
+          <p className="mt-2 max-w-xs text-xs text-slate-500">The side bar shows on wide screens; phones always use the Menu button.</p>
+        </div>
+        <div>
+          <div className="mb-2 text-sm font-medium text-slate-600">Text size</div>
+          <Segmented
+            label="Text size"
+            value={textSize}
+            onChange={setTextSize}
+            options={[
+              { value: 'sm', label: 'Small' },
+              { value: 'md', label: 'Normal' },
+              { value: 'lg', label: 'Large' },
+              { value: 'xl', label: 'Extra large' },
+            ]}
+          />
+        </div>
+        <div>
+          <div className="mb-2 text-sm font-medium text-slate-600">Spacing</div>
+          <Segmented
+            label="Spacing"
+            value={density}
+            onChange={setDensity}
+            options={[
+              { value: 'comfortable', label: 'Comfortable' },
+              { value: 'compact', label: 'Compact' },
+            ]}
+          />
+        </div>
+        <div>
+          <div className="mb-2 text-sm font-medium text-slate-600">Accent color</div>
+          <div role="radiogroup" aria-label="Accent color" className="flex flex-wrap gap-2">
+            {ACCENT_CHOICES.map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                role="radio"
+                aria-checked={accent === c.value}
+                onClick={() => setAccent(c.value)}
+                className={cx('field flex items-center gap-2 rounded-full py-1.5 pl-2 pr-3 text-sm font-medium text-slate-700', accent === c.value && 'ring-2 ring-cyan-500')}
+              >
+                <span className="h-4 w-4 rounded-full" style={{ background: c.swatch }} />
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-6 sm:grid-cols-2">
+        <div>
+          <div className="mb-2 text-sm font-medium text-slate-600">Tabs to show</div>
+          <div className="space-y-1.5">
+            {ALL_TABS.map((t) => (
+              <label key={t.to} className="flex items-center gap-2 text-sm text-slate-800">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-cyan-600"
+                  checked={t.to === '/settings' || !hiddenTabs.includes(t.to)}
+                  disabled={t.to === '/settings'}
+                  onChange={(e) => setTabHidden(t.to, !e.target.checked)}
+                />
+                {t.label}
+                {t.to === '/settings' && <span className="text-xs text-slate-500">(always on)</span>}
+              </label>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="mb-2 text-sm font-medium text-slate-600">Open the app on</div>
+          <select
+            aria-label="Open the app on"
+            className={inputClass}
+            value={shown.some((t) => t.to === startPage) ? startPage : shown[0].to}
+            onChange={(e) => setStartPage(e.target.value)}
+          >
+            {shown.map((t) => (
+              <option key={t.to} value={t.to}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 function AppearanceCard() {
   const { theme, style, design, setTheme, setStyle, setDesign } = useSettings();
   return (
@@ -638,6 +753,7 @@ export function Settings() {
       <OpeningStatementCard />
       <AiCard />
       <AppearanceCard />
+      <LayoutCard />
       <BooksCard />
     </div>
   );

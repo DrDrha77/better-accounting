@@ -43,6 +43,10 @@ const appleVars = (dark) => ({
   ...Object.fromEntries(SHADES.map((s) => [`--c-cyan-${s}`, rgb(APPLE_BLUE[dark ? INVERT[s] : s])])),
 });
 
+const ACCENTS = { blue: colors.blue, purple: colors.violet, orange: colors.orange, pink: colors.pink };
+const accentVars = (name, dark) =>
+  Object.fromEntries(SHADES.map((s) => [`--c-cyan-${s}`, rgb(ACCENTS[name][dark ? INVERT[s] : s])]));
+
 const vars = (dark) =>
   Object.fromEntries(
     THEMED.flatMap((name) =>
@@ -72,6 +76,12 @@ export default {
         ':root:root[data-theme="dark"]': greenAccent(true),
         ':root:root[data-design="apple"]': appleVars(false),
         ':root:root[data-design="apple"][data-theme="dark"]': appleVars(true),
+        ...Object.fromEntries(
+          Object.keys(ACCENTS).flatMap((name) => [
+            [`:root:root[data-accent="${name}"][data-theme="light"]`, accentVars(name, false)],
+            [`:root:root[data-accent="${name}"][data-theme="dark"]`, accentVars(name, true)],
+          ]),
+        ),
       });
     }),
   ],

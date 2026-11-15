@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createHashRouter, Navigate, RouterProvider } from 'react-router-dom';
-import { Layout } from './components/Layout';
+import { Layout, useStartPath } from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { bootstrapCompanies } from './store/companyActions';
 import './index.css';
@@ -17,12 +17,16 @@ import { TrialBalance } from './pages/TrialBalance';
 // Make sure the company registry exists and the active company's data is saved under its own keys.
 bootstrapCompanies();
 
+function StartRedirect() {
+  return <Navigate to={useStartPath()} replace />;
+}
+
 // Hash routing so the built app works from any static host without server rewrites.
 const router = createHashRouter([
   {
     element: <Layout />,
     children: [
-      { path: '/', element: <Navigate to="/add" replace /> },
+      { path: '/', element: <StartRedirect /> },
       { path: '/add', element: <AddTransaction /> },
       { path: '/journal', element: <Journal /> },
       { path: '/ledger', element: <Ledger /> },

@@ -9,7 +9,7 @@ import { cx } from './format';
 import { useSlidingIndicator } from './useSlidingIndicator';
 import { useApplyTheme } from './useTheme';
 
-export const NAV = [
+export const ALL_TABS = [
   { to: '/add', label: 'Add a transaction' },
   { to: '/journal', label: 'Journal' },
   { to: '/ledger', label: 'Ledger' },
@@ -19,6 +19,44 @@ export const NAV = [
   { to: '/income-statement', label: 'Income Statement' },
   { to: '/settings', label: 'Settings' },
 ];
+
+/** The tabs the user has turned on. Settings is always there so it can't be lost. */
+export function useNav() {
+  const hidden = useSettings((s) => s.hiddenTabs);
+  return ALL_TABS.filter((t) => t.to === '/settings' || !hidden.includes(t.to));
+}
+
+/** Where the brand link goes: the page the user chose to open on, if that tab is still shown. */
+export function useStartPath() {
+  const nav = useNav();
+  const start = useSettings((s) => s.startPage);
+  return nav.some((t) => t.to === start) ? start : nav[0].to;
+}
+
+/** Vertical tab list for the side-bar layout (wide screens only). */
+function SideNav({ apple }: { apple: boolean }) {
+  const nav = useNav();
+  return (
+    <aside className="sticky top-20 hidden w-52 shrink-0 self-start lg:block print:hidden" aria-label="Main">
+      <nav className={cx('space-y-1 p-2', apple ? 'rounded-3xl bg-slate-400/10' : 'card-strong rounded-2xl')}>
+        {nav.map((n) => (
+          <NavLink
+            key={n.to}
+            to={n.to}
+            className={({ isActive }) =>
+              cx(
+                'block rounded-full px-4 py-2 text-[15px] transition-colors duration-200',
+                isActive ? (apple ? 'bg-slate-400/20 font-semibold text-slate-900' : 'pill-active font-semibold text-white') : 'text-slate-700 hover:bg-slate-500/10 hover:text-slate-900',
+              )
+            }
+          >
+            {n.label}
+          </NavLink>
+        ))}
+      </nav>
+    </aside>
+  );
+}
 
 const tabClass = ({ isActive }: { isActive: boolean }) =>
   cx(
@@ -78,6 +116,9 @@ function AppleLayout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const { containerRef: tabsRef, indicator: tabPill } = useSlidingIndicator<HTMLElement>([location.pathname]);
+  const nav = useNav();
+  const startPath = useStartPath();
+  const side = useSettings((s) => s.tabPosition) === 'side';
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
@@ -86,15 +127,15 @@ function AppleLayout() {
       <header className="apple-nav print:hidden">
         <div className="mx-auto flex h-12 max-w-[1180px] items-center justify-between gap-4 px-5">
           <div className="flex min-w-0 items-center gap-3">
-            <NavLink to="/add" className="whitespace-nowrap text-[17px] font-semibold tracking-tight text-slate-900">
+            <NavLink to={startPath} className="whitespace-nowrap text-[17px] font-semibold tracking-tight text-slate-900">
               Better Accounting
             </NavLink>
             <CompanySwitcher className="!py-0.5 text-[13px]" />
           </div>
 
-          <nav ref={tabsRef} className="relative hidden items-center gap-0.5 lg:flex" aria-label="Main">
+          <nav ref={tabsRef} className={cx('relative hidden items-center gap-0.5', !side && 'lg:flex')} aria-label="Main">
             {tabPill}
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <NavLink key={n.to} to={n.to} data-tab className={appleTabClass}>
                 {n.label}
               </NavLink>
@@ -109,7 +150,7 @@ function AppleLayout() {
         {menuOpen && (
           <nav className="pop-in border-t border-slate-400/30 px-5 pb-3 pt-1 lg:hidden" aria-label="Main">
             <div className="mx-auto max-w-[1180px]">
-              {NAV.map((n) => (
+              {nav.map((n) => (
                 <NavLink
                   key={n.to}
                   to={n.to}
@@ -128,8 +169,11 @@ function AppleLayout() {
       <SaveFailedBanner maxWidth="max-w-[1180px]" />
 
       <main className="px-5 pb-16 pt-10 print:p-0">
-        <div className="mx-auto max-w-[1180px]">
-          <AnimatedOutlet />
+        <div className={cx('mx-auto max-w-[1180px]', side && 'gap-8 lg:flex')}>
+          {side && <SideNav apple />}
+          <div className="min-w-0 flex-1">
+            <AnimatedOutlet />
+          </div>
         </div>
       </main>
     </div>
@@ -140,6 +184,9 @@ function ClassicLayout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const { containerRef: tabsRef, indicator: tabPill } = useSlidingIndicator<HTMLElement>([location.pathname]);
+  const nav = useNav();
+  const startPath = useStartPath();
+  const side = useSettings((s) => s.tabPosition) === 'side';
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
@@ -148,15 +195,15 @@ function ClassicLayout() {
       <header className="sticky top-0 z-30 px-3 pt-3 sm:px-4 print:hidden">
         <div className="card-strong mx-auto flex max-w-[1400px] items-center justify-between gap-4 rounded-2xl px-4 py-2.5 sm:px-5">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
-            <NavLink to="/add" className="brand whitespace-nowrap text-2xl font-extrabold text-cyan-800">
+            <NavLink to={startPath} className="brand whitespace-nowrap text-2xl font-extrabold text-cyan-800">
               Better Accounting
             </NavLink>
             <CompanySwitcher />
           </div>
 
-          <nav ref={tabsRef} className="relative hidden items-center gap-1 lg:flex" aria-label="Main">
+          <nav ref={tabsRef} className={cx('relative hidden items-center gap-1', !side && 'lg:flex')} aria-label="Main">
             {tabPill}
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <NavLink key={n.to} to={n.to} data-tab className={tabClass}>
                 {n.label}
               </NavLink>
@@ -175,7 +222,7 @@ function ClassicLayout() {
 
         {menuOpen && (
           <nav className="card-strong pop-in mx-auto mt-2 max-w-[1400px] space-y-1 rounded-2xl p-2 lg:hidden" aria-label="Main">
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <NavLink
                 key={n.to}
                 to={n.to}
@@ -193,8 +240,11 @@ function ClassicLayout() {
       <SaveFailedBanner maxWidth="max-w-[1400px]" />
 
       <main className="px-3 py-6 sm:px-4 print:p-0">
-        <div className="mx-auto max-w-[1400px]">
-          <AnimatedOutlet />
+        <div className={cx('mx-auto max-w-[1400px]', side && 'gap-6 lg:flex')}>
+          {side && <SideNav apple={false} />}
+          <div className="min-w-0 flex-1">
+            <AnimatedOutlet />
+          </div>
         </div>
       </main>
     </div>
