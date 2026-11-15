@@ -10,6 +10,7 @@ import { useSlidingIndicator } from './useSlidingIndicator';
 import { useApplyTheme } from './useTheme';
 
 export const NAV = [
+  { to: '/add', label: 'Add a transaction' },
   { to: '/journal', label: 'Journal' },
   { to: '/ledger', label: 'Ledger' },
   { to: '/t-accounts', label: 'T-Accounts' },
@@ -85,7 +86,7 @@ function AppleLayout() {
       <header className="apple-nav print:hidden">
         <div className="mx-auto flex h-12 max-w-[1180px] items-center justify-between gap-4 px-5">
           <div className="flex min-w-0 items-center gap-3">
-            <NavLink to="/journal" className="whitespace-nowrap text-[17px] font-semibold tracking-tight text-slate-900">
+            <NavLink to="/add" className="whitespace-nowrap text-[17px] font-semibold tracking-tight text-slate-900">
               Better Accounting
             </NavLink>
             <CompanySwitcher className="!py-0.5 text-[13px]" />
@@ -147,7 +148,7 @@ function ClassicLayout() {
       <header className="sticky top-0 z-30 px-3 pt-3 sm:px-4 print:hidden">
         <div className="card-strong mx-auto flex max-w-[1400px] items-center justify-between gap-4 rounded-2xl px-4 py-2.5 sm:px-5">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
-            <NavLink to="/journal" className="brand whitespace-nowrap text-2xl font-extrabold text-cyan-800">
+            <NavLink to="/add" className="brand whitespace-nowrap text-2xl font-extrabold text-cyan-800">
               Better Accounting
             </NavLink>
             <CompanySwitcher />

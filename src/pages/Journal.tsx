@@ -8,9 +8,7 @@ import { HighlightMenu } from '../components/HighlightMenu';
 import { SavedJournalsMenu } from '../components/SavedJournalsMenu';
 import { QuickPost } from '../components/QuickPost';
 import { SaveForDate } from '../components/SaveForDate';
-import { ScanPage } from '../components/ScanPage';
 import { ReportShell } from '../components/ReportShell';
-import { TransactionComposer } from '../components/TransactionComposer';
 import { Button, Card, Field, inputClass } from '../components/ui';
 import { centsToCsv } from '../engine/csv';
 import { entryNumberLabel, sortEntries } from '../engine/journal';
@@ -32,7 +30,6 @@ export function Journal() {
   const [from, setFrom] = useState(periodFrom);
   const [to, setTo] = useState('');
   const [showComposer, setShowComposer] = useState(true);
-  const [blankDraft, setBlankDraft] = useState(0);
   // Accounts whose entries should stand out; entries that don't use them fade back.
   const [highlight, setHighlight] = useState<Set<string>>(() => new Set());
 
@@ -82,19 +79,10 @@ export function Journal() {
             <input type="date" className={inputClass} value={to} onChange={(e) => setTo(e.target.value)} />
           </Field>
           <Button className={TOOL} onClick={() => setShowComposer((s) => !s)}>
-            {showComposer ? 'Hide composer' : 'Show composer'}
+            {showComposer ? 'Hide quick post' : 'Show quick post'}
           </Button>
           <Button className={TOOL} onClick={() => navigate('/settings', { state: { scrollTo: 'opening-balances' } })}>
             Opening balances
-          </Button>
-          <Button
-            className={TOOL}
-            onClick={() => {
-              setShowComposer(true);
-              setBlankDraft(Date.now());
-            }}
-          >
-            Blank draft
           </Button>
           <SaveForDate className={TOOL} />
           <HighlightMenu className={TOOL} accounts={accounts} selected={highlight} onChange={setHighlight} />
@@ -108,17 +96,7 @@ export function Journal() {
       <div className="collapse-panel mb-5 print:hidden" data-open={showComposer} aria-hidden={!showComposer} {...(showComposer ? {} : { inert: '' })}>
         <div>
         <Card className="space-y-6 p-5">
-          <div>
-            <div className="text-base font-semibold text-slate-900">Describe it</div>
-            <p className="mb-3 text-sm text-slate-500">Type it in plain English, like “Bought a car for 4000”, and check the entry before it’s saved.</p>
-            <TransactionComposer examples={[]} showManualLink={false} blankDraftSignal={blankDraft} />
-          </div>
-          <div className="border-t border-slate-400/25 pt-5">
-            <QuickPost />
-          </div>
-          <div className="border-t border-slate-400/25 pt-5">
-            <ScanPage />
-          </div>
+          <QuickPost />
         </Card>
         </div>
       </div>
