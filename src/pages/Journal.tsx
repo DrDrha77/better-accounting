@@ -1,5 +1,7 @@
 import { Fragment, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { AppleJournal } from '../components/AppleJournal';
+import { useIsApple } from '../components/apple';
 import { EntryEditor } from '../components/EntryEditor';
 import { fmtDate, formatPlain } from '../components/format';
 import { QuickPost } from '../components/QuickPost';
@@ -20,6 +22,7 @@ const TOOL = 'px-5 py-2.5 text-[15px]';
 export function Journal() {
   const { accounts, entries, updateEntry, deleteEntry, clearJournal } = useBooks();
   const navigate = useNavigate();
+  const apple = useIsApple();
   const [editing, setEditing] = useState<string | null>(null);
   const periodFrom = useSettings((s) => s.periodFrom);
   const [from, setFrom] = useState(periodFrom);
@@ -100,6 +103,30 @@ export function Journal() {
         </div>
       </div>
 
+      {apple ? (
+        <>
+          {(from || to) && (
+            <p className="mb-3 px-2 text-sm text-slate-500">
+              Showing {from ? fmtDate(from) : 'the beginning'} – {to ? fmtDate(to) : 'today'}
+            </p>
+          )}
+          <AppleJournal
+            entries={sorted}
+            accounts={accounts}
+            editing={editing}
+            setEditing={setEditing}
+            onUpdate={(id, d) => {
+              const r = updateEntry(id, d);
+              if (r.ok) setEditing(null);
+              return r;
+            }}
+            onDelete={(e) => {
+              if (window.confirm(`Delete entry ${entryNumberLabel(e)} “${e.description}”?`)) deleteEntry(e.id);
+            }}
+            emptyText={entries.length ? 'No entries in this date range.' : 'No entries yet. Post above, or describe a transaction in plain English.'}
+          />
+        </>
+      ) : (
       <Card className="overflow-x-auto rounded-xl">
         <div className="bg-slate-400/10 px-4 py-3.5 text-center text-lg font-bold text-slate-900">
           General Journal
@@ -201,6 +228,7 @@ export function Journal() {
             </tbody>
         </table>
       </Card>
+      )}
     </ReportShell>
   );
 }

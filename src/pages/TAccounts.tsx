@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useIsApple } from '../components/apple';
 import { formatCents, formatPlain } from '../components/format';
 import { ReportShell } from '../components/ReportShell';
 import { AccountSelect, EmptyState, Field, inputClass } from '../components/ui';
@@ -75,14 +76,31 @@ function Side({ items }: { items: TItem[] }) {
 }
 
 function TChart({ t }: { t: TAccount }) {
+  const apple = useIsApple();
+  // Classic uses a heavy ink "T"; Apple-style uses a hairline one.
+  const rule = apple ? 'border-slate-400/50' : 'border-slate-800';
+  const weight = apple ? '' : '-2';
   return (
     <div className="card pop-in break-inside-avoid rounded-2xl p-5">
-      <div className="border-b-2 border-slate-800 pb-1 text-center font-medium text-slate-900">
-        {t.account.name}
-        <span className="ml-1 text-xs font-normal text-slate-400">#{t.account.number}</span>
-      </div>
-      <div className="grid grid-cols-2">
-        <div className="border-r-2 border-slate-800">
+      {apple ? (
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <div className="truncate text-lg font-semibold tracking-tight text-slate-900">{t.account.name}</div>
+            <div className="text-xs text-slate-500">Account {t.account.number}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-slate-500">{t.balanceSide === 'debit' ? 'Debit balance' : 'Credit balance'}</div>
+            <div className="text-2xl font-semibold tabular-nums tracking-tight text-slate-900">{formatCents(t.balance)}</div>
+          </div>
+        </div>
+      ) : (
+        <div className="border-b-2 border-slate-800 pb-1 text-center font-medium text-slate-900">
+          {t.account.name}
+          <span className="ml-1 text-xs font-normal text-slate-400">#{t.account.number}</span>
+        </div>
+      )}
+      <div className={`grid grid-cols-2 ${apple ? `border-t${weight} ${rule}` : ''}`}>
+        <div className={`border-r${weight} ${rule}`}>
           <div className="px-2 pt-1 text-xs uppercase tracking-wide text-slate-400">Debit</div>
           <Side items={t.debits} />
         </div>
@@ -92,14 +110,16 @@ function TChart({ t }: { t: TAccount }) {
         </div>
       </div>
       <div className="grid grid-cols-2 border-t border-slate-400/40 text-sm font-medium">
-        <div className="border-r-2 border-slate-800 px-2 py-1 text-right tabular-nums">{formatPlain(t.totalDebit)}</div>
+        <div className={`border-r${weight} ${rule} px-2 py-1 text-right tabular-nums`}>{formatPlain(t.totalDebit)}</div>
         <div className="px-2 py-1 text-right tabular-nums">{formatPlain(t.totalCredit)}</div>
       </div>
-      <div className={`mt-1 text-sm ${t.balanceSide === 'debit' ? 'text-left' : 'text-right'}`}>
-        <span className="rounded bg-slate-400/15 px-2 py-0.5 font-semibold tabular-nums">
-          Bal. {formatCents(t.balance)} {t.balanceSide === 'debit' ? 'Dr' : 'Cr'}
-        </span>
-      </div>
+      {!apple && (
+        <div className={`mt-1 text-sm ${t.balanceSide === 'debit' ? 'text-left' : 'text-right'}`}>
+          <span className="rounded bg-slate-400/15 px-2 py-0.5 font-semibold tabular-nums">
+            Bal. {formatCents(t.balance)} {t.balanceSide === 'debit' ? 'Dr' : 'Cr'}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
