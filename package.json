@@ -8,7 +8,10 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build:desktop": "tsc -b && vite build --base ./",
+    "dist:mac": "npm run build:desktop && electron-builder --mac --publish never",
+    "dist:win": "npm run build:desktop && electron-builder --win --publish never"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
@@ -24,10 +27,56 @@
     "@types/react-dom": "18.3.1",
     "@vitejs/plugin-react": "4.3.4",
     "autoprefixer": "10.4.20",
+    "electron": "^38.8.6",
+    "electron-builder": "^26.18.0",
     "postcss": "8.4.49",
     "tailwindcss": "3.4.15",
     "typescript": "5.6.3",
     "vite": "5.4.11",
     "vitest": "2.1.5"
+  },
+  "main": "electron/main.cjs",
+  "description": "Type a transaction in plain English; get a full set of books.",
+  "author": "Better Accounting",
+  "build": {
+    "appId": "com.betteraccounting.app",
+    "productName": "Better Accounting",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "electron/**",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.finance",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "minimumSystemVersion": "12.0",
+      "identity": null
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "artifactName": "Better-Accounting-${version}-${os}-${arch}.${ext}"
   }
 }

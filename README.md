@@ -98,3 +98,13 @@ For a new asset or expense category, add it to `ASSETS` or `EXPENSES` in `templa
 ```
 
 `debit`/`credit` refer to an account's `systemKey`, so renaming accounts doesn't break templates. A new key needs a matching account in `DEFAULT_ACCOUNTS` (`src/engine/accounts.ts`); saved books pick up new default accounts automatically on load. The test suite checks that every template parses its own `example`.
+
+## Desktop apps (Mac and Windows)
+
+The app also runs as a desktop app (Electron). It works fully offline and keeps its own books, separate from the website; use Settings → Backup / Restore to move data between them.
+
+- **Mac:** `.dmg` for Apple Silicon and Intel, macOS 12 (Monterey) or newer, so Ventura is supported.
+- **Windows:** `.exe` installer (Windows 10/11, 64-bit).
+- Installers are unsigned: on Mac right-click the app → Open the first time; on Windows choose "More info → Run anyway".
+
+Build locally: `npm run dist:mac` or `npm run dist:win` (output in `release/`). To publish both installers, push a tag like `v0.1.0`; GitHub Actions (`.github/workflows/desktop.yml`) builds them and attaches them to a Release.
