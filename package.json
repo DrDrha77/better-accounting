@@ -1,7 +1,7 @@
 {
   "name": "better-accounting",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,6 +16,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
     "@google/genai": "^3.2.0",
+    "electron-updater": "^6.8.11",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-router-dom": "6.28.0",
@@ -77,6 +78,14 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     },
-    "artifactName": "Better-Accounting-${version}-${os}-${arch}.${ext}"
-  }
+    "artifactName": "Better-Accounting-${version}-${os}-${arch}.${ext}",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "DrDrha77",
+        "repo": "better-accounting"
+      }
+    ]
+  },
+  "repository": "github:DrDrha77/better-accounting"
 }
