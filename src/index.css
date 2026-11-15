@@ -175,6 +175,152 @@ body,
 .journal-table thead th:first-child { border-left: 0; }
 .journal-table thead th:last-child { border-right: 0; }
 
+/* ------------------------------------------------------------------
+   Apple-style design (Settings → Appearance → Design).
+   A frosted top bar, big bold headlines, a light-gray page with white
+   rounded cards, blue buttons and links, and a pure-black dark mode.
+   It reuses the same component classes as the classic design, so every
+   page changes without per-page code. Grays and the blue accent come from
+   the palettes in tailwind.config.js.
+   ------------------------------------------------------------------ */
+:root[data-design='apple'] {
+  --apple-bg: #f5f5f7;
+  --apple-nav-bg: rgba(251, 251, 253, 0.8);
+  --apple-nav-border: rgba(0, 0, 0, 0.12);
+  --apple-nav-active: rgba(0, 0, 0, 0.07);
+  --seg-bg: #e8e8ed;
+  --seg-thumb: #ffffff;
+  --card-bg: #ffffff;
+  --card-solid: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.04);
+  --card-shadow: none;
+  --field-bg: #ffffff;
+  --field-border: #d2d2d7;
+  --ink-green: #0071e3;
+  --ink-green-hover: #0077ed;
+}
+:root[data-design='apple'][data-theme='dark'] {
+  --apple-bg: #000000;
+  --apple-nav-bg: rgba(22, 22, 23, 0.8);
+  --apple-nav-border: rgba(255, 255, 255, 0.14);
+  --apple-nav-active: rgba(255, 255, 255, 0.14);
+  --seg-bg: #1c1c1e;
+  --seg-thumb: #636366;
+  --card-bg: #1c1c1e;
+  --card-solid: #1c1c1e;
+  --card-border: rgba(255, 255, 255, 0.07);
+  --field-bg: #2c2c2e;
+  --field-border: #48484a;
+  --ink-green: #0071e3;
+  --ink-green-hover: #0a84ff;
+}
+
+html[data-design='apple'] {
+  /* SF Pro on Apple devices; Inter (the closest free lookalike) everywhere else. */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  letter-spacing: -0.011em;
+}
+html[data-design='apple'] body {
+  background-color: var(--apple-bg);
+  background-image: none;
+}
+
+[data-design='apple'] h1,
+[data-design='apple'] h2,
+[data-design='apple'] .brand,
+[data-design='apple'] .serif {
+  font-family: inherit;
+}
+[data-design='apple'] h1 {
+  font-size: clamp(2.25rem, 4.6vw, 3.5rem);
+  line-height: 1.07;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+[data-design='apple'] main h2 {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+}
+[data-design='apple'] .page-head {
+  margin-bottom: 2.25rem;
+}
+[data-design='apple'] .page-sub {
+  max-width: 46rem;
+  margin-top: 0.5rem;
+  font-size: 1.1875rem;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: rgb(var(--c-slate-500));
+}
+
+/* Flat white rounded cards on the gray page */
+[data-design='apple'] .card,
+[data-design='apple'] .card-strong {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: none;
+  border-radius: 1.5rem;
+}
+[data-design='apple'] .field {
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+}
+
+/* Buttons: filled blue for the main action, outlined blue for the rest */
+[data-design='apple'] .btn-secondary {
+  background: transparent;
+  color: rgb(var(--c-cyan-700));
+  border-color: rgb(var(--c-cyan-700) / 0.55);
+}
+[data-design='apple'] .btn-secondary:hover:not(:disabled) {
+  background: rgb(var(--c-cyan-700) / 0.08);
+}
+[data-design='apple'] .btn-secondary:disabled {
+  opacity: 0.4;
+}
+
+/* Segmented controls: gray track with a raised white thumb */
+[data-design='apple'] [role='radiogroup'].field {
+  background: var(--seg-bg);
+  border: 0;
+  border-radius: 0.7rem;
+}
+[data-design='apple'] [role='radiogroup'] > button {
+  border-radius: 0.55rem;
+}
+[data-design='apple'] .seg-active.pill-active {
+  background: var(--seg-thumb);
+  color: rgb(var(--c-slate-900));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+}
+
+/* Top bar: thin, frosted, with a quiet gray pill under the current page */
+.apple-nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--apple-nav-bg);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--apple-nav-border);
+}
+[data-design='apple'] .tab-indicator.pill-active {
+  background: var(--apple-nav-active);
+  box-shadow: none;
+}
+
+/* Journal table: quiet header, no cell borders */
+[data-design='apple'] .journal-table thead th {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgb(var(--c-slate-400) / 0.3);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(var(--c-slate-500));
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pop-in, .page-enter { animation: none !important; }
   .tab-indicator-animate, .collapse-panel { transition: none !important; }

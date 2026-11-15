@@ -5,8 +5,10 @@ import type { AiMode } from '../engine/parser/hybridParser';
 import { safeLocalStorage } from './safeStorage';
 
 export type ThemePref = 'system' | 'light' | 'dark';
-/** Page background: soft mint gradient (default) or faintly lined notebook paper. */
+/** Page background for the classic design: soft mint gradient (default) or faintly lined notebook paper. */
 export type StylePref = 'gradient' | 'ledger';
+/** The whole look of the app: the classic mint/serif design, or a clean Apple-style design. */
+export type DesignPref = 'classic' | 'apple';
 
 interface SettingsState {
   aiProvider: AiProvider;
@@ -15,6 +17,7 @@ interface SettingsState {
   aiMode: AiMode;
   theme: ThemePref;
   style: StylePref;
+  design: DesignPref;
   /** Shown at the top of financial statements. */
   companyName: string;
   /** Default date for new entries ("Save for date"); empty means today. */
@@ -28,13 +31,14 @@ interface SettingsState {
   setAiMode(mode: AiMode): void;
   setTheme(theme: ThemePref): void;
   setStyle(style: StylePref): void;
+  setDesign(design: DesignPref): void;
   setCompanyName(name: string): void;
   setEntryDate(date: string): void;
   setPeriodFrom(date: string): void;
   setLastBackupAt(at: string): void;
 }
 
-type Persisted = Pick<SettingsState, 'aiProvider' | 'apiKeys' | 'aiMode' | 'theme' | 'style' | 'companyName' | 'entryDate' | 'periodFrom' | 'lastBackupAt'>;
+type Persisted = Pick<SettingsState, 'aiProvider' | 'apiKeys' | 'aiMode' | 'theme' | 'style' | 'design' | 'companyName' | 'entryDate' | 'periodFrom' | 'lastBackupAt'>;
 
 export const useSettings = create<SettingsState>()(
   persist(
@@ -44,6 +48,7 @@ export const useSettings = create<SettingsState>()(
       aiMode: 'fallback',
       theme: 'system',
       style: 'gradient',
+      design: 'classic',
       companyName: '',
       entryDate: '',
       periodFrom: '',
@@ -53,6 +58,7 @@ export const useSettings = create<SettingsState>()(
       setAiMode: (aiMode) => set({ aiMode }),
       setTheme: (theme) => set({ theme }),
       setStyle: (style) => set({ style }),
+      setDesign: (design) => set({ design }),
       setCompanyName: (companyName) => set({ companyName: companyName.trim() }),
       setEntryDate: (entryDate) => set({ entryDate }),
       setPeriodFrom: (periodFrom) => set({ periodFrom }),
@@ -60,7 +66,7 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: 'better-accounting:settings',
-      version: 5,
+      version: 6,
       storage: createJSONStorage(() => safeLocalStorage),
       partialize: (s): Persisted => ({
         aiProvider: s.aiProvider,
@@ -68,6 +74,7 @@ export const useSettings = create<SettingsState>()(
         aiMode: s.aiMode,
         theme: s.theme,
         style: s.style,
+        design: s.design,
         companyName: s.companyName,
         entryDate: s.entryDate,
         periodFrom: s.periodFrom,
@@ -92,6 +99,8 @@ export const useSettings = create<SettingsState>()(
           entryDate: p.entryDate ?? '',
           periodFrom: p.periodFrom ?? '',
           lastBackupAt: p.lastBackupAt ?? '',
+          // v6 added the design choice; everyone keeps the classic look until they pick another.
+          design: p.design === 'apple' ? 'apple' : 'classic',
         } as Persisted;
       },
     },

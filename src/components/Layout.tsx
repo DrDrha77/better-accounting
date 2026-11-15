@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useSaveStatus } from '../store/safeStorage';
+import { useSettings } from '../store/useSettings';
 import { cx } from './format';
 import { useSlidingIndicator } from './useSlidingIndicator';
 import { useApplyTheme } from './useTheme';
@@ -34,11 +35,96 @@ function AnimatedOutlet() {
   );
 }
 
+/** Shown on every page when the browser refuses to save. */
+function SaveFailedBanner({ maxWidth }: { maxWidth: string }) {
+  const saveFailed = useSaveStatus((s) => s.failed);
+  if (!saveFailed) return null;
+  return (
+    <div role="alert" className={cx('mx-auto mt-3 px-3 sm:px-4 print:hidden', maxWidth)}>
+      <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-red-300">
+        <strong>Your changes can't be saved in this browser right now</strong> (a private window or full storage). Your work will be lost when you close this
+        page. Download a backup in <NavLink to="/settings" className="font-semibold underline">Settings</NavLink>.
+      </div>
+    </div>
+  );
+}
+
+/** Picks the chosen design: the classic mint layout or the Apple-style one. */
 export function Layout() {
   useApplyTheme();
+  const design = useSettings((s) => s.design);
+  return design === 'apple' ? <AppleLayout /> : <ClassicLayout />;
+}
+
+const appleTabClass = ({ isActive }: { isActive: boolean }) =>
+  cx(
+    'relative z-10 whitespace-nowrap rounded-full px-3.5 py-1 text-[13px] transition-colors duration-200',
+    isActive ? 'font-medium text-slate-900' : 'text-slate-600 hover:text-slate-900',
+  );
+
+/** Thin frosted bar with the brand on the left and the pages beside it, like apple.com. */
+function AppleLayout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const saveFailed = useSaveStatus((s) => s.failed);
+  const { containerRef: tabsRef, indicator: tabPill } = useSlidingIndicator<HTMLElement>([location.pathname]);
+
+  useEffect(() => setMenuOpen(false), [location.pathname]);
+
+  return (
+    <div className="min-h-screen">
+      <header className="apple-nav print:hidden">
+        <div className="mx-auto flex h-12 max-w-[1180px] items-center justify-between gap-4 px-5">
+          <NavLink to="/journal" className="whitespace-nowrap text-[17px] font-semibold tracking-tight text-slate-900">
+            Better Accounting
+          </NavLink>
+
+          <nav ref={tabsRef} className="relative hidden items-center gap-0.5 lg:flex" aria-label="Main">
+            {tabPill}
+            {NAV.map((n) => (
+              <NavLink key={n.to} to={n.to} data-tab className={appleTabClass}>
+                {n.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <button type="button" className="text-[13px] font-medium text-cyan-700 lg:hidden" aria-expanded={menuOpen} onClick={() => setMenuOpen((o) => !o)}>
+            {menuOpen ? 'Close' : 'Menu'}
+          </button>
+        </div>
+
+        {menuOpen && (
+          <nav className="pop-in border-t border-slate-400/30 px-5 pb-3 pt-1 lg:hidden" aria-label="Main">
+            <div className="mx-auto max-w-[1180px]">
+              {NAV.map((n) => (
+                <NavLink
+                  key={n.to}
+                  to={n.to}
+                  className={({ isActive }) =>
+                    cx('block border-b border-slate-400/20 py-2.5 text-[17px] last:border-0', isActive ? 'font-semibold text-slate-900' : 'text-slate-600')
+                  }
+                >
+                  {n.label}
+                </NavLink>
+              ))}
+            </div>
+          </nav>
+        )}
+      </header>
+
+      <SaveFailedBanner maxWidth="max-w-[1180px]" />
+
+      <main className="px-5 pb-16 pt-10 print:p-0">
+        <div className="mx-auto max-w-[1180px]">
+          <AnimatedOutlet />
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function ClassicLayout() {
+  const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
   const { containerRef: tabsRef, indicator: tabPill } = useSlidingIndicator<HTMLElement>([location.pathname]);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
@@ -87,14 +173,7 @@ export function Layout() {
         )}
       </header>
 
-      {saveFailed && (
-        <div role="alert" className="mx-auto mt-3 max-w-[1400px] px-3 sm:px-4 print:hidden">
-          <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-red-300">
-            <strong>Your changes can't be saved in this browser right now</strong> (a private window or full storage). Your work will be lost when you close this
-            page. Download a backup in <NavLink to="/settings" className="font-semibold underline">Settings</NavLink>.
-          </div>
-        </div>
-      )}
+      <SaveFailedBanner maxWidth="max-w-[1400px]" />
 
       <main className="px-3 py-6 sm:px-4 print:p-0">
         <div className="mx-auto max-w-[1400px]">

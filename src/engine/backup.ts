@@ -19,6 +19,7 @@ export interface BackupSettings {
   periodFrom: string;
   theme: 'system' | 'light' | 'dark';
   style: 'gradient' | 'ledger';
+  design: 'classic' | 'apple';
 }
 
 export interface BackupFile {
@@ -41,6 +42,7 @@ export function makeBackup(books: Books, settings: BackupSettings, now: Date = n
       periodFrom: settings.periodFrom,
       theme: settings.theme,
       style: settings.style,
+      design: settings.design,
     },
   };
 }
@@ -149,6 +151,7 @@ export function parseBackup(text: string): RestoreResult {
     periodFrom: isDate(s.periodFrom) ? s.periodFrom : '',
     theme: s.theme === 'light' || s.theme === 'dark' ? s.theme : 'system',
     style: s.style === 'ledger' ? 'ledger' : 'gradient',
+    design: s.design === 'apple' ? 'apple' : 'classic',
   };
 
   const finalAccounts = withMissingDefaults(accounts);

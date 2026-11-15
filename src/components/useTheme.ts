@@ -5,9 +5,13 @@ import { useSettings } from '../store/useSettings';
 export function useApplyTheme() {
   const pref = useSettings((s) => s.theme);
   const style = useSettings((s) => s.style);
+  const design = useSettings((s) => s.design);
   useEffect(() => {
     document.documentElement.dataset.style = style;
   }, [style]);
+  useEffect(() => {
+    document.documentElement.dataset.design = design;
+  }, [design]);
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const apply = () => {

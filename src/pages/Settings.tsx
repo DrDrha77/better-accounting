@@ -14,7 +14,7 @@ import { openingStatement } from '../engine/reports';
 import type { Account, AccountType } from '../engine/types';
 import { useBooks } from '../store/useBooks';
 import { useSaveStatus } from '../store/safeStorage';
-import { useSettings, type StylePref, type ThemePref } from '../store/useSettings';
+import { useSettings, type DesignPref, type StylePref, type ThemePref } from '../store/useSettings';
 import { backupFilename, makeBackup, parseBackup } from '../engine/backup';
 import { BalanceSheetBody } from './BalanceSheet';
 
@@ -28,6 +28,11 @@ const THEMES: { value: ThemePref; label: string }[] = [
   { value: 'system', label: 'Match my device' },
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' },
+];
+
+const DESIGNS: { value: DesignPref; label: string }[] = [
+  { value: 'classic', label: 'Classic' },
+  { value: 'apple', label: 'Apple-style' },
 ];
 
 const STYLES: { value: StylePref; label: string }[] = [
@@ -49,7 +54,7 @@ function Segmented<T extends string>({ value, options, onChange, label }: { valu
           onClick={() => onChange(o.value)}
           className={cx(
             'rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-300',
-            value === o.value ? 'pill-active text-white shadow-sm' : 'text-slate-600 hover:text-slate-900',
+            value === o.value ? 'seg-active pill-active text-white shadow-sm' : 'text-slate-600 hover:text-slate-900',
           )}
         >
           {o.label}
@@ -392,15 +397,26 @@ function AiCard() {
 // ---------------------------------------------------------------- Appearance & books
 
 function AppearanceCard() {
-  const { theme, style, setTheme, setStyle } = useSettings();
+  const { theme, style, design, setTheme, setStyle, setDesign } = useSettings();
   return (
     <Card className="p-5 sm:p-6">
       <SectionTitle>Appearance</SectionTitle>
       <div className="mt-3 flex flex-wrap gap-x-10 gap-y-4">
         <div>
-          <div className="mb-2 text-sm font-medium text-slate-600">Background</div>
-          <Segmented label="Background" value={style} onChange={setStyle} options={STYLES} />
+          <div className="mb-2 text-sm font-medium text-slate-600">Design</div>
+          <Segmented label="Design" value={design} onChange={setDesign} options={DESIGNS} />
+          <p className="mt-2 max-w-xs text-xs text-slate-500">
+            {design === 'apple'
+              ? 'A clean look with a frosted top bar, big headlines, white cards on gray and blue buttons.'
+              : 'Mint gradient, serif headings and deep-green buttons.'}
+          </p>
         </div>
+        {design === 'classic' && (
+          <div>
+            <div className="mb-2 text-sm font-medium text-slate-600">Background</div>
+            <Segmented label="Background" value={style} onChange={setStyle} options={STYLES} />
+          </div>
+        )}
         <div>
           <div className="mb-2 text-sm font-medium text-slate-600">Light or dark</div>
           <Segmented label="Theme" value={theme} onChange={setTheme} options={THEMES} />
@@ -412,7 +428,7 @@ function AppearanceCard() {
 
 function BooksCard() {
   const { accounts, entries, nextSeq, loadSample, reset, restore } = useBooks();
-  const { companyName, entryDate, periodFrom, theme, style, lastBackupAt, setCompanyName, setEntryDate, setPeriodFrom, setTheme, setStyle, setLastBackupAt } =
+  const { companyName, entryDate, periodFrom, theme, style, design, lastBackupAt, setCompanyName, setEntryDate, setPeriodFrom, setTheme, setStyle, setDesign, setLastBackupAt } =
     useSettings();
   const failed = useSaveStatus((s) => s.failed);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -430,7 +446,7 @@ function BooksCard() {
 
   const download = () => {
     const now = new Date();
-    const backup = makeBackup({ accounts, entries, nextSeq }, { companyName, entryDate, periodFrom, theme, style }, now);
+    const backup = makeBackup({ accounts, entries, nextSeq }, { companyName, entryDate, periodFrom, theme, style, design }, now);
     downloadFile(backupFilename(now), JSON.stringify(backup, null, 2), 'application/json');
     setLastBackupAt(now.toISOString());
     setErrors([]);
@@ -451,6 +467,7 @@ function BooksCard() {
     setPeriodFrom(r.settings.periodFrom);
     setTheme(r.settings.theme);
     setStyle(r.settings.style);
+    setDesign(r.settings.design);
     setErrors([]);
     setMessage(`Restored ${r.entryCount} journal ${r.entryCount === 1 ? 'entry' : 'entries'} and ${r.accountCount} accounts from the backup.`);
   };

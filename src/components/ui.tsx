@@ -9,7 +9,7 @@ type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
 export function Button({ variant = 'secondary', className, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
   const styles: Record<Variant, string> = {
     primary: 'pill-active text-white hover:brightness-110 disabled:opacity-45 disabled:saturate-50',
-    secondary: 'field text-slate-800 hover:bg-slate-500/5 disabled:text-slate-400',
+    secondary: 'btn-secondary field text-slate-800 hover:bg-slate-500/5 disabled:text-slate-400',
     danger: 'field border-red-300 text-red-700 hover:bg-red-500/10 disabled:opacity-40',
     ghost: 'text-slate-600 hover:bg-slate-500/10 disabled:text-slate-300',
   };
@@ -34,10 +34,10 @@ export function Card({ children, className }: { children: ReactNode; className?:
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+    <div className="page-head mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h1 className="text-3xl text-slate-900 sm:text-4xl">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+        {subtitle && <p className="page-sub mt-1 text-sm text-slate-500">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2 print:hidden">{actions}</div>}
     </div>

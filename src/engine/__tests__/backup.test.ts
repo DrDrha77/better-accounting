@@ -2,7 +2,7 @@ import { backupFilename, makeBackup, parseBackup, type BackupSettings } from '..
 import { buildSampleBooks } from '../sample';
 import { balanceSheet, trialBalance } from '../reports';
 
-const settings: BackupSettings = { companyName: 'Ridgeview Motel', entryDate: '2026-10-01', periodFrom: '2026-11-30', theme: 'dark', style: 'ledger' };
+const settings: BackupSettings = { companyName: 'Ridgeview Motel', entryDate: '2026-10-01', periodFrom: '2026-11-30', theme: 'dark', style: 'ledger', design: 'apple' };
 const books = buildSampleBooks(0);
 const text = () => JSON.stringify(makeBackup(books, settings, new Date('2026-11-13T12:00:00Z')));
 
@@ -22,7 +22,7 @@ describe('backup and restore', () => {
   it('never includes API keys', () => {
     const t = text();
     expect(t).not.toMatch(/apiKey|api_key|sk-ant|AIza/i);
-    expect(Object.keys(JSON.parse(t).settings).sort()).toEqual(['companyName', 'entryDate', 'periodFrom', 'style', 'theme']);
+    expect(Object.keys(JSON.parse(t).settings).sort()).toEqual(['companyName', 'design', 'entryDate', 'periodFrom', 'style', 'theme']);
   });
 
   it('names the file with the date', () => {
@@ -63,9 +63,9 @@ describe('backup and restore', () => {
 
   it('sanitises odd preferences', () => {
     const f = JSON.parse(text());
-    f.settings = { companyName: 5, theme: 'neon', style: 'glass', entryDate: 'soon', periodFrom: '2026-02-30x' };
+    f.settings = { companyName: 5, theme: 'neon', style: 'glass', design: 'retro', entryDate: 'soon', periodFrom: '2026-02-30x' };
     const r = parseBackup(JSON.stringify(f));
     if (!r.ok) throw new Error(r.reason);
-    expect(r.settings).toEqual({ companyName: '', entryDate: '', periodFrom: '', theme: 'system', style: 'gradient' });
+    expect(r.settings).toEqual({ companyName: '', entryDate: '', periodFrom: '', theme: 'system', style: 'gradient', design: 'classic' });
   });
 });
