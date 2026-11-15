@@ -4,7 +4,7 @@ import { withMissingDefaults } from '../engine/accounts';
 import * as ops from '../engine/books';
 import type { OpeningBalanceInput } from '../engine/opening';
 import { buildSampleBooks } from '../engine/sample';
-import { safeLocalStorage } from './safeStorage';
+import { activeCompanyStorage, booksKey } from './companyStorage';
 import type { Books, EntryDraft } from '../engine/types';
 
 export type ActionResult = { ok: true; id?: string } | { ok: false; errors: string[] };
@@ -56,7 +56,7 @@ export const useBooks = create<BooksState>()(
     {
       name: 'better-accounting:books',
       version: 2,
-      storage: createJSONStorage(() => safeLocalStorage),
+      storage: createJSONStorage(() => activeCompanyStorage(booksKey)),
       partialize: (s) => pickBooks(s),
       // v2 added default accounts (Vehicles, Furniture, Advertising, …); give saved books the ones they lack.
       migrate: (persisted) => {

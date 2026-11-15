@@ -41,6 +41,7 @@ export function AppleJournal({
   onUpdate,
   onDelete,
   emptyText,
+  highlight,
 }: {
   entries: JournalEntry[];
   accounts: Account[];
@@ -49,8 +50,11 @@ export function AppleJournal({
   onUpdate: (id: string, draft: EntryDraft) => ActionResult;
   onDelete: (entry: JournalEntry) => void;
   emptyText: string;
+  /** Accounts to highlight: entries that use them get a strong tint, the rest fade. */
+  highlight?: Set<string>;
 }) {
   const byId = new Map(accounts.map((a) => [a.id, a]));
+  const hl = highlight ?? new Set<string>();
 
   if (!entries.length) return <div className="card rounded-3xl p-8 text-center text-[15px] text-slate-500">{emptyText}</div>;
 
@@ -62,8 +66,12 @@ export function AppleJournal({
           <div className="card divide-y divide-slate-400/20 overflow-hidden rounded-3xl">
             {g.entries.map((e) => {
               const total = e.lines.reduce((s, l) => s + l.debit, 0);
+              const hit = e.lines.some((l) => hl.has(l.accountId));
               return (
-                <article key={e.id} className="px-5 py-4 sm:px-6">
+                <article
+                  key={e.id}
+                  className={`px-5 py-4 transition-opacity sm:px-6 ${hl.size > 0 ? (hit ? 'shadow-[inset_4px_0_0_rgb(var(--c-amber-500))]' : 'opacity-35') : ''}`}
+                >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="text-[17px] font-semibold leading-snug text-slate-900">
@@ -99,7 +107,10 @@ export function AppleJournal({
 
                   <ul className="mt-3 space-y-1.5 rounded-2xl bg-slate-400/10 px-4 py-3 text-[15px]">
                     {e.lines.map((l, i) => (
-                      <li key={i} className={`flex items-baseline gap-3 ${l.credit ? 'pl-5' : ''}`}>
+                      <li
+                        key={i}
+                        className={`flex items-baseline gap-3 ${l.credit ? 'pl-5' : ''} ${hl.has(l.accountId) ? '-mx-2 rounded-lg bg-amber-400/30 px-2 py-0.5 font-semibold ring-1 ring-amber-500/50' : ''}`}
+                      >
                         <span className="w-6 shrink-0 text-xs font-semibold text-slate-500">{l.debit ? 'Dr' : 'Cr'}</span>
                         <span className="min-w-0 flex-1 text-slate-800">
                           {byId.get(l.accountId)?.name ?? 'Unknown account'}

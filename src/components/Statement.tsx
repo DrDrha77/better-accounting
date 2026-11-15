@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 import type { StatementLine } from '../engine/reports';
-import { useSettings } from '../store/useSettings';
+import { useCompanyName } from '../store/useCompanies';
 import { cx, formatCents } from './format';
 import { Card } from './ui';
 
 /** Building blocks for financial statements (income statement, balance sheet…). */
 export function StatementCard({ title, period, children }: { title: string; period: string; children: ReactNode }) {
-  const companyName = useSettings((s) => s.companyName);
+  const companyName = useCompanyName();
   return (
     <Card className="mx-auto max-w-2xl px-6 py-6">
       <div className="mb-5 text-center">

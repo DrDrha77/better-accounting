@@ -6,8 +6,9 @@ import { OPENING_DESCRIPTION, plugToOpeningBalanceEquity, type OpeningBalanceInp
 import type { Account, AccountType, Cents } from '../engine/types';
 
 export { parseSignedAmount };
+import { undoable } from '../store/companyActions';
 import { useBooks } from '../store/useBooks';
-import { useSettings } from '../store/useSettings';
+import { useCompany } from '../store/useCompany';
 import { cx, fmtDate, formatCents, formatPlain } from './format';
 import { Button, Card, ErrorList, Field, inputClass } from './ui';
 
@@ -33,7 +34,7 @@ function toLine(account: Account, signed: Cents): OpeningBalanceLine | null {
  */
 export const OpeningBalancesCard = forwardRef<HTMLDivElement>(function OpeningBalancesCard(_props, ref) {
   const { accounts, entries, saveOpening, removeOpening, clearJournal } = useBooks();
-  const setPeriodFrom = useSettings((s) => s.setPeriodFrom);
+  const setPeriodFrom = useCompany((s) => s.setPeriodFrom);
   const existing = entries.find((e) => e.kind === 'opening');
   const obe = findBySystemKey(accounts, SYSTEM_KEYS.openingBalanceEquity);
 
@@ -82,14 +83,25 @@ export const OpeningBalancesCard = forwardRef<HTMLDivElement>(function OpeningBa
     setMessage(null);
     if (bad.length) return setErrors(bad);
     if (!input.lines.length) return setErrors(['Enter at least one opening balance.']);
+    // One click, no dialog. When "Clear journal first" is on, the Undo bar brings the old journal back.
+    const run = () => {
+      if (clearFirst && postedCount) clearJournal();
+      const r = saveOpening(input);
+      if (!r.ok) {
+        setErrors(r.errors);
+        return false;
+      }
+      if (setPeriod) setPeriodFrom(date);
+      return true;
+    };
+    let saved = true;
     if (clearFirst && postedCount) {
-      if (!window.confirm(`Clear journal first: delete all ${postedCount} journal ${postedCount === 1 ? 'entry' : 'entries'}? Accounts are kept. This can't be undone.`))
-        return;
-      clearJournal();
-    }
-    const r = saveOpening(input);
-    if (!r.ok) return setErrors(r.errors);
-    if (setPeriod) setPeriodFrom(date);
+      undoable(`Cleared ${postedCount} journal ${postedCount === 1 ? 'entry' : 'entries'} and saved the opening balances`, () => {
+        saved = run();
+        return saved;
+      });
+    } else saved = run();
+    if (!saved) return;
     setErrors([]);
     setClearFirst(false);
     setMessage(
@@ -100,8 +112,9 @@ export const OpeningBalancesCard = forwardRef<HTMLDivElement>(function OpeningBa
   };
 
   const remove = () => {
-    if (!window.confirm('Remove the opening balance entry?')) return;
-    removeOpening();
+    undoable('Removed the opening balance entry', () => {
+      removeOpening();
+    });
     setAmounts({});
     setMessage('Opening balances removed.');
   };

@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createHashRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { bootstrapCompanies } from './store/companyActions';
 import './index.css';
 import { BalanceSheet } from './pages/BalanceSheet';
 import { IncomeStatement } from './pages/IncomeStatement';
@@ -10,6 +11,9 @@ import { Ledger } from './pages/Ledger';
 import { Settings } from './pages/Settings';
 import { TAccounts } from './pages/TAccounts';
 import { TrialBalance } from './pages/TrialBalance';
+
+// Make sure the company registry exists and the active company's data is saved under its own keys.
+bootstrapCompanies();
 
 // Hash routing so the built app works from any static host without server rewrites.
 const router = createHashRouter([

@@ -5,7 +5,10 @@ import { todayISO } from '../engine/journal';
 import { PROVIDERS } from '../engine/parser/modelInfo';
 import type { ScanImage, ScanOutcome } from '../engine/parser/types';
 import { applyScan, planScan, type ScanPlan } from '../engine/scan';
+import { renameCompany, undoable } from '../store/companyActions';
 import { useBooks } from '../store/useBooks';
+import { useCompany } from '../store/useCompany';
+import { isPlaceholderName, useCompanies, useCompanyName } from '../store/useCompanies';
 import { useSettings } from '../store/useSettings';
 import { cx, fmtDate, formatCents, formatPlain } from './format';
 import { Button, ErrorList } from './ui';
@@ -46,9 +49,9 @@ export function ScanPage() {
   const entries = useBooks((s) => s.entries);
   const provider = useSettings((s) => s.aiProvider);
   const apiKey = useSettings((s) => s.apiKeys[s.aiProvider]);
-  const companyName = useSettings((s) => s.companyName);
-  const setCompanyName = useSettings((s) => s.setCompanyName);
-  const setPeriodFrom = useSettings((s) => s.setPeriodFrom);
+  const companyName = useCompanyName();
+  const activeId = useCompanies((s) => s.activeId);
+  const setPeriodFrom = useCompany((s) => s.setPeriodFrom);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<(ScanImage & { previewUrl: string; name: string }) | null>(null);
@@ -56,7 +59,7 @@ export function ScanPage() {
   const [plan, setPlan] = useState<ScanPlan | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [startFresh, setStartFresh] = useState(false);
-  const [useCompany, setUseCompany] = useState(true);
+  const [adoptName, setAdoptName] = useState(true);
   const [done, setDone] = useState<string | null>(null);
   const [readBy, setReadBy] = useState<string | null>(null);
 
@@ -93,11 +96,14 @@ export function ScanPage() {
 
   const post = () => {
     if (!plan) return;
-    if (startFresh && hasBooks && !window.confirm('Start fresh: delete your current journal entries and opening balances before posting? Accounts are kept.')) return;
-    const r = applyScan(useBooks.getState(), plan, { startFresh });
-    useBooks.setState({ accounts: r.books.accounts, entries: r.books.entries, nextSeq: r.books.nextSeq });
-    if (useCompany && plan.companyName && !companyName) setCompanyName(plan.companyName);
-    if (r.openingPosted && plan.opening) setPeriodFrom(plan.opening.date);
+    // One click, no dialog: the Undo bar reverses the whole post (including "start fresh").
+    let r!: ReturnType<typeof applyScan>;
+    undoable('Posted the scanned page', () => {
+      r = applyScan(useBooks.getState(), plan, { startFresh });
+      useBooks.setState({ accounts: r.books.accounts, entries: r.books.entries, nextSeq: r.books.nextSeq });
+      if (adoptName && plan.companyName && isPlaceholderName(companyName)) renameCompany(activeId, plan.companyName);
+      if (r.openingPosted && plan.opening) setPeriodFrom(plan.opening.date);
+    });
     setDone(
       `Posted ${r.openingPosted ? 'the opening balances and ' : ''}${r.entriesPosted} journal ${r.entriesPosted === 1 ? 'entry' : 'entries'}` +
         (r.accountsAdded ? `, and added ${r.accountsAdded} new ${r.accountsAdded === 1 ? 'account' : 'accounts'}` : '') +
@@ -231,9 +237,9 @@ export function ScanPage() {
                 Start fresh: clear my current journal and opening balances first
               </label>
             )}
-            {plan.companyName && !companyName && (
+            {plan.companyName && isPlaceholderName(companyName) && (
               <label className="flex items-center gap-2">
-                <input type="checkbox" className="h-4 w-4 accent-cyan-700" checked={useCompany} onChange={(e) => setUseCompany(e.target.checked)} />
+                <input type="checkbox" className="h-4 w-4 accent-cyan-700" checked={adoptName} onChange={(e) => setAdoptName(e.target.checked)} />
                 Use “{plan.companyName}” as the company name
               </label>
             )}

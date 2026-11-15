@@ -3,7 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AppleJournal } from '../components/AppleJournal';
 import { useIsApple } from '../components/apple';
 import { EntryEditor } from '../components/EntryEditor';
-import { fmtDate, formatPlain } from '../components/format';
+import { cx, fmtDate, formatPlain } from '../components/format';
+import { HighlightMenu } from '../components/HighlightMenu';
+import { SavedJournalsMenu } from '../components/SavedJournalsMenu';
 import { QuickPost } from '../components/QuickPost';
 import { SaveForDate } from '../components/SaveForDate';
 import { ScanPage } from '../components/ScanPage';
@@ -13,8 +15,10 @@ import { Button, Card, Field, inputClass } from '../components/ui';
 import { centsToCsv } from '../engine/csv';
 import { entryNumberLabel, sortEntries } from '../engine/journal';
 import { filterEntries } from '../engine/ledger';
+import type { JournalEntry } from '../engine/types';
+import { undoable } from '../store/companyActions';
 import { useBooks } from '../store/useBooks';
-import { useSettings } from '../store/useSettings';
+import { useCompany } from '../store/useCompany';
 
 /** Toolbar buttons are a bit larger, like the rest of the Journal page. */
 const TOOL = 'px-5 py-2.5 text-[15px]';
@@ -24,11 +28,13 @@ export function Journal() {
   const navigate = useNavigate();
   const apple = useIsApple();
   const [editing, setEditing] = useState<string | null>(null);
-  const periodFrom = useSettings((s) => s.periodFrom);
+  const periodFrom = useCompany((s) => s.periodFrom);
   const [from, setFrom] = useState(periodFrom);
   const [to, setTo] = useState('');
   const [showComposer, setShowComposer] = useState(true);
   const [blankDraft, setBlankDraft] = useState(0);
+  // Accounts whose entries should stand out; entries that don't use them fade back.
+  const [highlight, setHighlight] = useState<Set<string>>(() => new Set());
 
   const sorted = useMemo(() => sortEntries(filterEntries(entries, { from: from || undefined, to: to || undefined })), [entries, from, to]);
   const byId = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts]);
@@ -43,11 +49,23 @@ export function Journal() {
     ),
   ];
 
+  // One click, no dialog: the Undo bar reverses these.
   const clear = () => {
     if (!postedCount) return;
-    if (window.confirm(`Delete all ${postedCount} journal ${postedCount === 1 ? 'entry' : 'entries'}? Your accounts and opening balances are kept. This can't be undone.`))
+    undoable(`Cleared ${postedCount} journal ${postedCount === 1 ? 'entry' : 'entries'}`, () => {
       clearJournal();
+    });
   };
+  const removeEntry = (e: JournalEntry) =>
+    undoable(`Deleted entry ${entryNumberLabel(e)} “${e.description}”`, () => {
+      deleteEntry(e.id);
+    });
+
+  const hl = highlight;
+  const lineHit = (accountId: string) => hl.has(accountId);
+  const entryHit = (e: { lines: { accountId: string }[] }) => e.lines.some((l) => hl.has(l.accountId));
+  const hitCount = hl.size ? sorted.filter(entryHit).length : 0;
+  const hitNames = [...hl].map((id) => byId.get(id)?.name).filter(Boolean) as string[];
 
   return (
     <ReportShell
@@ -79,6 +97,8 @@ export function Journal() {
             Blank draft
           </Button>
           <SaveForDate className={TOOL} />
+          <HighlightMenu className={TOOL} accounts={accounts} selected={highlight} onChange={setHighlight} />
+          <SavedJournalsMenu className={TOOL} />
           <Button className={TOOL} variant="danger" onClick={clear} disabled={!postedCount}>
             Clear journal
           </Button>
@@ -103,6 +123,18 @@ export function Journal() {
         </div>
       </div>
 
+      {hl.size > 0 && (
+        <div role="status" className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl bg-amber-400/20 px-4 py-2 text-sm text-slate-800 ring-1 ring-amber-500/40 print:hidden">
+          <span>
+            Highlighting <strong>{hitNames.slice(0, 3).join(', ')}{hitNames.length > 3 ? ` +${hitNames.length - 3}` : ''}</strong>: {hitCount} of {sorted.length}{' '}
+            {sorted.length === 1 ? 'entry uses' : 'entries use'} {hl.size === 1 ? 'it' : 'at least one of them'}. Other entries are faded.
+          </span>
+          <button type="button" className="font-semibold text-cyan-700 hover:underline" onClick={() => setHighlight(new Set())}>
+            Clear highlight
+          </button>
+        </div>
+      )}
+
       {apple ? (
         <>
           {(from || to) && (
@@ -120,9 +152,8 @@ export function Journal() {
               if (r.ok) setEditing(null);
               return r;
             }}
-            onDelete={(e) => {
-              if (window.confirm(`Delete entry ${entryNumberLabel(e)} “${e.description}”?`)) deleteEntry(e.id);
-            }}
+            onDelete={removeEntry}
+            highlight={highlight}
             emptyText={entries.length ? 'No entries in this date range.' : 'No entries yet. Post above, or describe a transaction in plain English.'}
           />
         </>
@@ -160,7 +191,13 @@ export function Journal() {
               {sorted.map((e) => (
                 <Fragment key={e.id}>
                   {e.lines.map((l, i) => (
-                    <tr key={i} className={i === 0 ? 'border-t border-slate-400/25' : ''}>
+                    <tr
+                      key={i}
+                      className={cx(
+                        i === 0 && 'border-t border-slate-400/25',
+                        hl.size > 0 && (lineHit(l.accountId) ? 'bg-amber-400/30 font-semibold' : !entryHit(e) && 'opacity-35'),
+                      )}
+                    >
                       <td className="whitespace-nowrap px-4 pt-2 align-top text-slate-600">
                         {i === 0 && (
                           <>
@@ -187,9 +224,7 @@ export function Journal() {
                               <button
                                 type="button"
                                 className="ml-3 text-xs text-red-600 hover:underline"
-                                onClick={() => {
-                                  if (window.confirm(`Delete entry ${entryNumberLabel(e)} “${e.description}”?`)) deleteEntry(e.id);
-                                }}
+                                onClick={() => removeEntry(e)}
                               >
                                 Delete
                               </button>
@@ -198,7 +233,7 @@ export function Journal() {
                       </td>
                     </tr>
                   ))}
-                  <tr>
+                  <tr className={cx(hl.size > 0 && !entryHit(e) && 'opacity-35')}>
                     <td />
                     <td className="px-4 pb-3 pl-8 pt-0.5 text-xs italic text-slate-500" colSpan={4}>
                       ({e.description})

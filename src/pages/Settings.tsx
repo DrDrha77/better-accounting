@@ -12,7 +12,10 @@ import { PROVIDERS } from '../engine/parser/modelInfo';
 import type { ParseResult } from '../engine/parser/types';
 import { openingStatement } from '../engine/reports';
 import type { Account, AccountType } from '../engine/types';
+import { createCompany, deleteCompany, renameCompany, switchCompany, undoable } from '../store/companyActions';
 import { useBooks } from '../store/useBooks';
+import { useCompany } from '../store/useCompany';
+import { useCompanies, useCompanyName } from '../store/useCompanies';
 import { useSaveStatus } from '../store/safeStorage';
 import { useSettings, type DesignPref, type StylePref, type ThemePref } from '../store/useSettings';
 import { backupFilename, makeBackup, parseBackup } from '../engine/backup';
@@ -68,40 +71,117 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   return <h2 className="serif text-lg font-bold text-slate-900">{children}</h2>;
 }
 
-// ---------------------------------------------------------------- Company
+// ---------------------------------------------------------------- Companies
 
-function CompanyCard() {
-  const companyName = useSettings((s) => s.companyName);
-  const setCompanyName = useSettings((s) => s.setCompanyName);
-  const [draft, setDraft] = useState(companyName);
-  const [saved, setSaved] = useState(false);
+function CompaniesCard() {
+  const companies = useCompanies((s) => s.companies);
+  const activeId = useCompanies((s) => s.activeId);
+  const [name, setName] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+
+  const add = () => {
+    const r = createCompany(name);
+    if (!r.ok) return setError(r.reason);
+    setName('');
+    setError(null);
+  };
+
+  const saveRename = (id: string) => {
+    const problem = renameCompany(id, editName);
+    if (problem) return setError(problem);
+    setEditing(null);
+    setError(null);
+  };
+
   return (
     <Card className="p-5 sm:p-6">
-      <SectionTitle>Company</SectionTitle>
+      <div id="companies" className="scroll-mt-24" />
+      <SectionTitle>Companies</SectionTitle>
+      <p className="mt-1 text-sm text-slate-600">
+        Each company keeps its own books, opening balances, period and saved journals. Your API keys and appearance are shared by all of them. The company
+        name appears at the top of its statements.
+      </p>
+
       <form
-        className="mt-3 max-w-md space-y-3"
+        className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center"
         onSubmit={(e) => {
           e.preventDefault();
-          setCompanyName(draft);
-          setSaved(true);
+          add();
         }}
       >
-        <Field label="Company name">
-          <input
-            className={cx(inputClass, 'py-2 text-base')}
-            placeholder="Company name"
-            value={draft}
-            onChange={(e) => {
-              setDraft(e.target.value);
-              setSaved(false);
-            }}
-          />
-        </Field>
-        <Button type="submit" variant="primary" className="w-full py-2.5">
-          Save
+        <input
+          aria-label="New company name"
+          className={cx(inputClass, 'py-2 text-base sm:flex-1')}
+          placeholder="New company name"
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            setError(null);
+          }}
+        />
+        <Button type="submit" variant="primary">
+          Add company
         </Button>
-        {saved && <p className="text-sm text-cyan-700">Saved. It appears at the top of your statements.</p>}
       </form>
+      <div className="mt-2">
+        <ErrorList errors={error ? [error] : []} />
+      </div>
+
+      <ul className="mt-3 divide-y divide-slate-400/20 rounded-2xl border border-slate-400/25">
+        {companies.map((c) => {
+          const active = c.id === activeId;
+          return (
+            <li key={c.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+              {editing === c.id ? (
+                <form
+                  className="flex min-w-0 flex-1 flex-wrap items-center gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    saveRename(c.id);
+                  }}
+                >
+                  <input aria-label={`Rename ${c.name}`} className={cx(inputClass, 'min-w-[10rem] flex-1 py-1.5')} value={editName} autoFocus onChange={(e) => setEditName(e.target.value)} />
+                  <Button type="submit" variant="primary">
+                    Save
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setEditing(null);
+                      setError(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </form>
+              ) : (
+                <>
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium text-slate-900">{c.name}</span>
+                    {active && <span className="ml-2 rounded-full bg-cyan-700/10 px-2 py-0.5 text-xs font-medium text-cyan-700">Active</span>}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {!active && <Button onClick={() => switchCompany(c.id)}>Switch to</Button>}
+                    <Button
+                      onClick={() => {
+                        setEditing(c.id);
+                        setEditName(c.name);
+                        setError(null);
+                      }}
+                    >
+                      Rename
+                    </Button>
+                    <Button variant="danger" disabled={companies.length < 2} title={companies.length < 2 ? 'You need at least one company' : `Delete ${c.name}`} onClick={() => deleteCompany(c.id)}>
+                      Delete
+                    </Button>
+                  </div>
+                </>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </Card>
   );
 }
@@ -128,11 +208,12 @@ function ChartOfAccountsCard() {
     } else setErrors(r.errors);
   };
 
-  const remove = (a: Account) => {
-    if (!window.confirm(`Delete the account “${a.name}”?`)) return;
-    const r = deleteAccount(a.id);
-    setErrors(r.ok ? [] : r.errors);
-  };
+  const remove = (a: Account) =>
+    undoable(`Deleted account “${a.name}”`, () => {
+      const r = deleteAccount(a.id);
+      setErrors(r.ok ? [] : r.errors);
+      return r.ok;
+    });
 
   const blocked = (a: Account) =>
     a.systemKey === SYSTEM_KEYS.openingBalanceEquity
@@ -428,8 +509,10 @@ function AppearanceCard() {
 
 function BooksCard() {
   const { accounts, entries, nextSeq, loadSample, reset, restore } = useBooks();
-  const { companyName, entryDate, periodFrom, theme, style, design, lastBackupAt, setCompanyName, setEntryDate, setPeriodFrom, setTheme, setStyle, setDesign, setLastBackupAt } =
-    useSettings();
+  const { theme, style, design, setTheme, setStyle, setDesign } = useSettings();
+  const { entryDate, periodFrom, lastBackupAt, setEntryDate, setPeriodFrom, setLastBackupAt } = useCompany();
+  const companyName = useCompanyName();
+  const activeId = useCompanies((s) => s.activeId);
   const failed = useSaveStatus((s) => s.failed);
   const fileRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -439,10 +522,6 @@ function BooksCard() {
   useEffect(() => {
     if (navigator.storage?.persisted) void navigator.storage.persisted().then(setProtectedStorage);
   }, []);
-
-  const confirmThen = (msg: string, fn: () => void) => {
-    if (!entries.length || window.confirm(msg)) fn();
-  };
 
   const download = () => {
     const now = new Date();
@@ -459,15 +538,16 @@ function BooksCard() {
     const r = parseBackup(await file.text());
     if (fileRef.current) fileRef.current.value = '';
     if (!r.ok) return setErrors([r.reason]);
-    const when = r.exportedAt ? ` saved ${fmtDate(r.exportedAt.slice(0, 10))}` : '';
-    if (!window.confirm(`Replace your current books with this backup${when}? It has ${r.entryCount} journal ${r.entryCount === 1 ? 'entry' : 'entries'} and ${r.accountCount} accounts. Your current books will be overwritten.`)) return;
-    restore(r.books);
-    setCompanyName(r.settings.companyName);
-    setEntryDate(r.settings.entryDate);
-    setPeriodFrom(r.settings.periodFrom);
-    setTheme(r.settings.theme);
-    setStyle(r.settings.style);
-    setDesign(r.settings.design);
+    // One click: the Undo bar puts the previous books back.
+    undoable('Restored the backup', () => {
+      restore(r.books);
+      if (r.settings.companyName) renameCompany(activeId, r.settings.companyName);
+      setEntryDate(r.settings.entryDate);
+      setPeriodFrom(r.settings.periodFrom);
+      setTheme(r.settings.theme);
+      setStyle(r.settings.style);
+      setDesign(r.settings.design);
+    });
     setErrors([]);
     setMessage(`Restored ${r.entryCount} journal ${r.entryCount === 1 ? 'entry' : 'entries'} and ${r.accountCount} accounts from the backup.`);
   };
@@ -486,7 +566,7 @@ function BooksCard() {
     <Card className="p-5 sm:p-6">
       <SectionTitle>Your books</SectionTitle>
       <p className="mt-1 text-sm text-slate-600">
-        Everything is saved in <strong>this browser only</strong>. It doesn't sync to other browsers or devices, and clearing the site's data erases it, so download
+        These are the books for <strong>{companyName}</strong>. Everything is saved in <strong>this browser only</strong>. It doesn't sync to other browsers or devices, and clearing the site's data erases it, so download
         a backup now and then.
       </p>
 
@@ -527,8 +607,8 @@ function BooksCard() {
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-400/25 pt-4">
-        <Button onClick={() => confirmThen('Replace your current books with sample data?', loadSample)}>Load sample data</Button>
-        <Button variant="danger" onClick={() => confirmThen('Erase all entries and reset the chart of accounts? This cannot be undone.', reset)}>
+        <Button onClick={() => undoable('Loaded the sample data', loadSample)}>Load sample data</Button>
+        <Button variant="danger" onClick={() => undoable('Reset the books', reset)}>
           Reset books
         </Button>
       </div>
@@ -539,19 +619,22 @@ function BooksCard() {
 export function Settings() {
   const location = useLocation();
   const openingRef = useRef<HTMLDivElement>(null);
-  // Arriving from the Journal's "Opening balances" button scrolls straight to that section.
+  // Remount the opening balances form when the opening entry is removed or brought back (Undo), so it shows the right amounts.
+  const openingId = useBooks((st) => st.entries.find((e) => e.kind === 'opening')?.id ?? 'none');
+  // Arriving from the Journal's "Opening balances" button or the company switcher scrolls straight to that section.
   useEffect(() => {
-    if ((location.state as { scrollTo?: string } | null)?.scrollTo !== 'opening-balances') return;
-    const t = setTimeout(() => openingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+    const target = (location.state as { scrollTo?: string } | null)?.scrollTo;
+    if (!target) return;
+    const t = setTimeout(() => document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
     return () => clearTimeout(t);
   }, [location.state]);
 
   return (
     <div className="space-y-4">
       <PageHeader title="Settings" />
-      <CompanyCard />
+      <CompaniesCard />
       <ChartOfAccountsCard />
-      <OpeningBalancesCard ref={openingRef} />
+      <OpeningBalancesCard key={openingId} ref={openingRef} />
       <OpeningStatementCard />
       <AiCard />
       <AppearanceCard />

@@ -18,13 +18,16 @@ interface SettingsState {
   theme: ThemePref;
   style: StylePref;
   design: DesignPref;
-  /** Shown at the top of financial statements. */
+  /**
+   * @deprecated These four used to be app-wide. They are now per company (see useCompanies / useCompany)
+   * and are kept here only so the first company can be seeded from what an older version saved.
+   */
   companyName: string;
-  /** Default date for new entries ("Save for date"); empty means today. */
+  /** @deprecated per company: useCompany */
   entryDate: string;
-  /** Start of the reporting period (Journal and Income Statement "From"); empty means from the beginning. */
+  /** @deprecated per company: useCompany */
   periodFrom: string;
-  /** When the books were last downloaded as a backup (ISO timestamp); empty if never. */
+  /** @deprecated per company: useCompany */
   lastBackupAt: string;
   setProvider(p: AiProvider): void;
   setApiKey(p: AiProvider, key: string): void;
@@ -32,10 +35,6 @@ interface SettingsState {
   setTheme(theme: ThemePref): void;
   setStyle(style: StylePref): void;
   setDesign(design: DesignPref): void;
-  setCompanyName(name: string): void;
-  setEntryDate(date: string): void;
-  setPeriodFrom(date: string): void;
-  setLastBackupAt(at: string): void;
 }
 
 type Persisted = Pick<SettingsState, 'aiProvider' | 'apiKeys' | 'aiMode' | 'theme' | 'style' | 'design' | 'companyName' | 'entryDate' | 'periodFrom' | 'lastBackupAt'>;
@@ -59,10 +58,6 @@ export const useSettings = create<SettingsState>()(
       setTheme: (theme) => set({ theme }),
       setStyle: (style) => set({ style }),
       setDesign: (design) => set({ design }),
-      setCompanyName: (companyName) => set({ companyName: companyName.trim() }),
-      setEntryDate: (entryDate) => set({ entryDate }),
-      setPeriodFrom: (periodFrom) => set({ periodFrom }),
-      setLastBackupAt: (lastBackupAt) => set({ lastBackupAt }),
     }),
     {
       name: 'better-accounting:settings',
