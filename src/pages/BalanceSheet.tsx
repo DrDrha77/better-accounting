@@ -7,7 +7,7 @@ import { Field, inputClass, StatusBadge } from '../components/ui';
 import { centsToCsv, type CsvCell } from '../engine/csv';
 import { balanceSheet, type BalanceSheet as BS } from '../engine/reports';
 import { useBooks } from '../store/useBooks';
-import { useSettings } from '../store/useSettings';
+import { useCompanyName } from '../store/useCompanies';
 
 export function balanceSheetCsv(bs: BS, heading: string): CsvCell[][] {
   return [
@@ -40,7 +40,7 @@ export function BalanceSheetBody({
   compact?: boolean;
 }) {
   const apple = useIsApple();
-  const company = useSettings((s) => s.companyName);
+  const company = useCompanyName();
   if (apple) {
     const equityRows = showNetIncome || bs.netIncome !== 0;
     return (

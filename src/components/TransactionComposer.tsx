@@ -4,6 +4,7 @@ import { todayISO } from '../engine/journal';
 import { PROVIDERS } from '../engine/parser/modelInfo';
 import type { ParseResult } from '../engine/parser/types';
 import { useBooks } from '../store/useBooks';
+import { useCompany } from '../store/useCompany';
 import { defaultEntryDate, useSettings } from '../store/useSettings';
 import { blankLines, EntryEditor } from './EntryEditor';
 import { formatCents } from './format';
@@ -46,7 +47,7 @@ export function TransactionComposer({
 }) {
   const { accounts, addEntry } = useBooks();
   const provider = useSettings((s) => s.aiProvider);
-  const entryDate = useSettings((s) => s.entryDate);
+  const entryDate = useCompany((s) => s.entryDate);
   const startDate = defaultEntryDate(entryDate, todayISO());
   const [text, setText] = useState('');
   const [mode, setMode] = useState<Mode>({ kind: 'idle' });

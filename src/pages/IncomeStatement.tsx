@@ -7,7 +7,8 @@ import { Field, inputClass } from '../components/ui';
 import { centsToCsv } from '../engine/csv';
 import { incomeStatement } from '../engine/reports';
 import { useBooks } from '../store/useBooks';
-import { useSettings } from '../store/useSettings';
+import { useCompany } from '../store/useCompany';
+import { useCompanyName } from '../store/useCompanies';
 
 export function periodLabel(from: string, to: string): string {
   if (from && to) return `For the period ${fmtDate(from)} – ${fmtDate(to)}`;
@@ -18,13 +19,13 @@ export function periodLabel(from: string, to: string): string {
 
 export function IncomeStatement() {
   const { accounts, entries } = useBooks();
-  const periodFrom = useSettings((s) => s.periodFrom);
+  const periodFrom = useCompany((s) => s.periodFrom);
   const [from, setFrom] = useState(periodFrom);
   const [to, setTo] = useState('');
   const is = useMemo(() => incomeStatement(accounts, entries, from || undefined, to || undefined), [accounts, entries, from, to]);
   const period = periodLabel(from, to);
   const apple = useIsApple();
-  const company = useSettings((s) => s.companyName);
+  const company = useCompanyName();
 
   const csvRows = () => [
     ['Income Statement', period],

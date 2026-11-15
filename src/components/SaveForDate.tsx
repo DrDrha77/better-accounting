@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { todayISO } from '../engine/journal';
-import { useSettings } from '../store/useSettings';
+import { useCompany } from '../store/useCompany';
 import { fmtDate } from './format';
 import { Button, inputClass } from './ui';
 
@@ -9,8 +9,8 @@ import { Button, inputClass } from './ui';
  * earlier month). Applies to Quick post, plain-English entries without a date, and blank drafts.
  */
 export function SaveForDate({ className }: { className?: string }) {
-  const entryDate = useSettings((s) => s.entryDate);
-  const setEntryDate = useSettings((s) => s.setEntryDate);
+  const entryDate = useCompany((s) => s.entryDate);
+  const setEntryDate = useCompany((s) => s.setEntryDate);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(entryDate || todayISO());
 

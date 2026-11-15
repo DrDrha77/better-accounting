@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useSaveStatus } from '../store/safeStorage';
+import { useCompanies } from '../store/useCompanies';
+import { CompanySwitcher } from './CompanySwitcher';
+import { UndoBar } from './UndoBar';
 import { useSettings } from '../store/useSettings';
 import { cx } from './format';
 import { useSlidingIndicator } from './useSlidingIndicator';
@@ -25,11 +28,13 @@ const tabClass = ({ isActive }: { isActive: boolean }) =>
 /** Re-mounts the page on navigation so it plays the enter animation, and scrolls to the top. */
 function AnimatedOutlet() {
   const location = useLocation();
+  // A different company means different data, so every page remounts fresh.
+  const activeId = useCompanies((s) => s.activeId);
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [location.pathname]);
   return (
-    <div key={location.pathname} className="page-enter">
+    <div key={`${activeId}:${location.pathname}`} className="page-enter">
       <Outlet />
     </div>
   );
@@ -53,7 +58,12 @@ function SaveFailedBanner({ maxWidth }: { maxWidth: string }) {
 export function Layout() {
   useApplyTheme();
   const design = useSettings((s) => s.design);
-  return design === 'apple' ? <AppleLayout /> : <ClassicLayout />;
+  return (
+    <>
+      {design === 'apple' ? <AppleLayout /> : <ClassicLayout />}
+      <UndoBar />
+    </>
+  );
 }
 
 const appleTabClass = ({ isActive }: { isActive: boolean }) =>
@@ -74,9 +84,12 @@ function AppleLayout() {
     <div className="min-h-screen">
       <header className="apple-nav print:hidden">
         <div className="mx-auto flex h-12 max-w-[1180px] items-center justify-between gap-4 px-5">
-          <NavLink to="/journal" className="whitespace-nowrap text-[17px] font-semibold tracking-tight text-slate-900">
-            Better Accounting
-          </NavLink>
+          <div className="flex min-w-0 items-center gap-3">
+            <NavLink to="/journal" className="whitespace-nowrap text-[17px] font-semibold tracking-tight text-slate-900">
+              Better Accounting
+            </NavLink>
+            <CompanySwitcher className="!py-0.5 text-[13px]" />
+          </div>
 
           <nav ref={tabsRef} className="relative hidden items-center gap-0.5 lg:flex" aria-label="Main">
             {tabPill}
@@ -133,9 +146,12 @@ function ClassicLayout() {
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 px-3 pt-3 sm:px-4 print:hidden">
         <div className="card-strong mx-auto flex max-w-[1400px] items-center justify-between gap-4 rounded-2xl px-4 py-2.5 sm:px-5">
-          <NavLink to="/journal" className="brand whitespace-nowrap text-2xl font-extrabold text-cyan-800">
-            Better Accounting
-          </NavLink>
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
+            <NavLink to="/journal" className="brand whitespace-nowrap text-2xl font-extrabold text-cyan-800">
+              Better Accounting
+            </NavLink>
+            <CompanySwitcher />
+          </div>
 
           <nav ref={tabsRef} className="relative hidden items-center gap-1 lg:flex" aria-label="Main">
             {tabPill}

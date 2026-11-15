@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react';
 import { todayISO } from '../engine/journal';
 import { parseAmount } from '../engine/money';
 import { useBooks } from '../store/useBooks';
-import { defaultEntryDate, useSettings } from '../store/useSettings';
+import { useCompany } from '../store/useCompany';
+import { defaultEntryDate } from '../store/useSettings';
 import { cx } from './format';
 import { AccountSelect, Button, ErrorList, Field, inputClass } from './ui';
 
 /** One debit, one credit, one amount: the fastest way to post a simple entry. */
 export function QuickPost() {
   const { accounts, addEntry } = useBooks();
-  const entryDate = useSettings((s) => s.entryDate);
+  const entryDate = useCompany((s) => s.entryDate);
   const [date, setDate] = useState(() => defaultEntryDate(entryDate, todayISO()));
   // Follow "Save for date" when it changes.
   useEffect(() => setDate(defaultEntryDate(entryDate, todayISO())), [entryDate]);
