@@ -22,7 +22,7 @@ const router = createHashRouter([
   {
     element: <Layout />,
     children: [
-      { path: '/', element: <Navigate to="/journal" replace /> },
+      { path: '/', element: <Navigate to="/add" replace /> },
       { path: '/add', element: <AddTransaction /> },
       { path: '/journal', element: <Journal /> },
       { path: '/ledger', element: <Ledger /> },
@@ -36,7 +36,7 @@ const router = createHashRouter([
       // Pages that moved into Settings.
       { path: '/accounts', element: <Navigate to="/settings" replace /> },
       { path: '/opening-statement', element: <Navigate to="/settings" replace /> },
-      { path: '*', element: <Navigate to="/journal" replace /> },
+      { path: '*', element: <Navigate to="/add" replace /> },
     ],
   },
 ]);

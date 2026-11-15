@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { QuickPost } from '../components/QuickPost';
 import { ScanPage } from '../components/ScanPage';
 import { TransactionComposer } from '../components/TransactionComposer';
 import { Card, PageHeader } from '../components/ui';
@@ -7,7 +8,7 @@ import { Card, PageHeader } from '../components/ui';
 export function AddTransaction() {
   return (
     <div>
-      <PageHeader title="Add a transaction" subtitle="Type it in plain English or scan a page. Quick post is on the Journal. Everything lands in the journal and updates every report." />
+      <PageHeader title="Add a transaction" subtitle="Type it in plain English or scan a page. Manual add is at the bottom. Everything lands in the journal and updates every report." />
       <Card className="space-y-6 p-5">
         <div>
           <div className="text-base font-semibold text-slate-900">Describe it</div>
@@ -16,6 +17,9 @@ export function AddTransaction() {
         </div>
         <div className="border-t border-slate-400/25 pt-5">
           <ScanPage />
+        </div>
+        <div className="border-t border-slate-400/25 pt-5">
+          <QuickPost />
         </div>
       </Card>
       <p className="mt-4 text-sm text-slate-500">

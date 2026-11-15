@@ -8,7 +8,20 @@ export function CompanySwitcher({ className }: { className?: string }) {
   const companies = useCompanies((s) => s.companies);
   const activeId = useCompanies((s) => s.activeId);
   const navigate = useNavigate();
-  if (companies.length < 2) return null;
+  if (companies.length < 2) {
+    // One company: show its name beside the brand (click to rename it in Settings).
+    const name = companies.find((c) => c.id === activeId)?.name ?? companies[0]?.name ?? '';
+    return (
+      <button
+        type="button"
+        title="Company settings"
+        onClick={() => navigate('/settings', { state: { scrollTo: 'companies' } })}
+        className={cx('max-w-[12rem] truncate rounded-full px-3 py-1 text-sm font-medium text-slate-600 ring-1 ring-slate-400/30 hover:text-slate-900', className)}
+      >
+        {name}
+      </button>
+    );
+  }
   return (
     <select
       aria-label="Switch company"
