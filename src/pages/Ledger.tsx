@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useIsApple } from '../components/apple';
 import { fmtDate, formatCents, formatPlain } from '../components/format';
 import { ReportShell } from '../components/ReportShell';
 import { AccountSelect, Card, EmptyState, Field, inputClass } from '../components/ui';
@@ -64,15 +65,31 @@ export function Ledger() {
 
 function LedgerTable({ ledger }: { ledger: LedgerT }) {
   const side = normalSide(ledger.account);
+  const apple = useIsApple();
   return (
     <Card className="overflow-x-auto break-inside-avoid">
-      <div className="flex items-baseline justify-between border-b border-slate-400/25 px-4 py-2.5">
-        <h2 className="font-medium text-slate-900">
-          {ledger.account.number} · {ledger.account.name}
-        </h2>
-        <span className="text-xs text-slate-500">Normal balance: {side}</span>
-      </div>
-      <table className="w-full min-w-[36rem] text-sm">
+      {apple ? (
+        <div className="flex flex-wrap items-end justify-between gap-3 px-5 pb-3 pt-5">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight text-slate-900">{ledger.account.name}</h2>
+            <div className="text-sm text-slate-500">
+              Account {ledger.account.number} · normal balance {side}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-slate-500">Ending balance</div>
+            <div className="text-3xl font-semibold tabular-nums tracking-tight text-slate-900">{formatCents(ledger.balance)}</div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-baseline justify-between border-b border-slate-400/25 px-4 py-2.5">
+          <h2 className="font-medium text-slate-900">
+            {ledger.account.number} · {ledger.account.name}
+          </h2>
+          <span className="text-xs text-slate-500">Normal balance: {side}</span>
+        </div>
+      )}
+      <table className="data-table w-full min-w-[36rem] text-sm">
         <thead className="text-left text-xs uppercase tracking-wide text-slate-500">
           <tr>
             <th className="px-4 py-2 font-medium">Date</th>

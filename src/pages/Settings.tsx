@@ -168,7 +168,7 @@ function ChartOfAccountsCard() {
       </div>
 
       <div className="mt-3 overflow-x-auto">
-        <table className="w-full min-w-[32rem] text-sm">
+        <table className="data-table w-full min-w-[32rem] text-sm">
           <thead className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
             <tr className="border-b border-slate-400/30">
               <th className="px-2.5 py-2">Name</th>
@@ -226,7 +226,7 @@ function OpeningStatementCard() {
       <p className="mt-1 text-sm text-slate-600">The position you started the books with, before any transactions.</p>
       <div className="mt-4">
         {os ? (
-          <BalanceSheetBody bs={os} title="Opening Statement" period={`As of ${fmtDate(os.asOf)}`} showNetIncome={false} />
+          <BalanceSheetBody bs={os} title="Opening Statement" period={`As of ${fmtDate(os.asOf)}`} showNetIncome={false} compact />
         ) : (
           <p className="text-sm text-slate-500">No opening balances yet.</p>
         )}

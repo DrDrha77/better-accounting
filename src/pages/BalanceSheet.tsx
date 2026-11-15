@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { AppleStatementHeader, ListRow, ListSection, StatTiles, useIsApple } from '../components/apple';
 import { fmtDate, formatCents } from '../components/format';
 import { ReportShell } from '../components/ReportShell';
 import { Row, Section, StatementCard } from '../components/Statement';
@@ -6,6 +7,7 @@ import { Field, inputClass, StatusBadge } from '../components/ui';
 import { centsToCsv, type CsvCell } from '../engine/csv';
 import { balanceSheet, type BalanceSheet as BS } from '../engine/reports';
 import { useBooks } from '../store/useBooks';
+import { useSettings } from '../store/useSettings';
 
 export function balanceSheetCsv(bs: BS, heading: string): CsvCell[][] {
   return [
@@ -23,7 +25,65 @@ export function balanceSheetCsv(bs: BS, heading: string): CsvCell[][] {
 }
 
 /** The statement body, shared by the Balance Sheet and Opening Statement pages. */
-export function BalanceSheetBody({ bs, title, period, showNetIncome = true }: { bs: BS; title: string; period: string; showNetIncome?: boolean }) {
+export function BalanceSheetBody({
+  bs,
+  title,
+  period,
+  showNetIncome = true,
+  compact = false,
+}: {
+  bs: BS;
+  title: string;
+  period: string;
+  showNetIncome?: boolean;
+  /** Used inside another card (Settings): smaller tiles, no centered header. */
+  compact?: boolean;
+}) {
+  const apple = useIsApple();
+  const company = useSettings((s) => s.companyName);
+  if (apple) {
+    const equityRows = showNetIncome || bs.netIncome !== 0;
+    return (
+      <div className="space-y-6">
+        {!compact && <AppleStatementHeader company={company} title={title} period={period} />}
+        <StatTiles
+          compact={compact}
+          tiles={[
+            { label: 'Total assets', cents: bs.totalAssets },
+            { label: 'Total liabilities', cents: bs.totalLiabilities },
+            { label: "Total equity", cents: bs.totalEquity },
+          ]}
+        />
+        <div className="flex justify-center">
+          <StatusBadge ok={bs.balanced} okText="Assets = Liabilities + Equity ✓" badText={`Out of balance by ${formatCents(Math.abs(bs.difference))}`} />
+        </div>
+        <ListSection title="Assets" inset={compact}>
+          {bs.assets.length === 0 && <ListRow label="None" muted />}
+          {bs.assets.map((l) => (
+            <ListRow key={l.account.id} label={l.account.name} amount={l.amount} />
+          ))}
+          <ListRow label="Total assets" amount={bs.totalAssets} strong />
+        </ListSection>
+        <ListSection title="Liabilities" inset={compact}>
+          {bs.liabilities.length === 0 && <ListRow label="None" muted />}
+          {bs.liabilities.map((l) => (
+            <ListRow key={l.account.id} label={l.account.name} amount={l.amount} />
+          ))}
+          <ListRow label="Total liabilities" amount={bs.totalLiabilities} strong />
+        </ListSection>
+        <ListSection title="Owner's equity" inset={compact}>
+          {bs.equity.map((l) => (
+            <ListRow key={l.account.id} label={l.account.name} amount={l.amount} />
+          ))}
+          {equityRows && <ListRow label="Net income (to date)" amount={bs.netIncome} />}
+          <ListRow label="Total equity" amount={bs.totalEquity} strong />
+        </ListSection>
+        <ListSection inset={compact}>
+          <ListRow label="Total liabilities and equity" amount={bs.totalLiabilitiesAndEquity} strong />
+        </ListSection>
+      </div>
+    );
+  }
   return (
     <>
       <div className="mb-4 flex justify-center">

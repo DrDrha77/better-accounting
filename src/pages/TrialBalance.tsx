@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { fmtDate, formatCents, formatPlain } from '../components/format';
+import { ListSection, StatTiles, useIsApple } from '../components/apple';
+import { cx, fmtDate, formatCents, formatPlain } from '../components/format';
 import { ReportShell } from '../components/ReportShell';
 import { Card, EmptyState, Field, inputClass, StatusBadge } from '../components/ui';
 import { centsToCsv } from '../engine/csv';
@@ -9,6 +10,7 @@ import { useBooks } from '../store/useBooks';
 export function TrialBalance() {
   const { accounts, entries } = useBooks();
   const [asOf, setAsOf] = useState('');
+  const apple = useIsApple();
   const tb = useMemo(() => trialBalance(accounts, entries, asOf || undefined), [accounts, entries, asOf]);
 
   const csvRows = () => [
@@ -30,11 +32,43 @@ export function TrialBalance() {
         </Field>
       }
     >
-      <div className="mb-4">
+      {apple && (
+        <div className="mb-4">
+          <StatTiles
+            tiles={[
+              { label: 'Total debits', cents: tb.totalDebit },
+              { label: 'Total credits', cents: tb.totalCredit },
+            ]}
+          />
+        </div>
+      )}
+      <div className={cx('mb-4', apple && 'flex justify-center')}>
         <StatusBadge ok={tb.balanced} okText="Balanced ✓" badText={`Out of balance by ${formatCents(Math.abs(tb.difference))}`} />
       </div>
       {tb.rows.length === 0 ? (
         <EmptyState>No balances to show.</EmptyState>
+      ) : apple ? (
+        <ListSection>
+          <div className="grid grid-cols-[1fr_6.5rem_6.5rem] gap-3 px-5 py-2.5 text-xs font-semibold text-slate-500 sm:grid-cols-[1fr_9rem_9rem]">
+            <span>Account</span>
+            <span className="text-right">Debit</span>
+            <span className="text-right">Credit</span>
+          </div>
+          {tb.rows.map((r) => (
+            <div key={r.account.id} className="grid grid-cols-[1fr_6.5rem_6.5rem] items-baseline gap-3 px-5 py-3 text-[15px] sm:grid-cols-[1fr_9rem_9rem]">
+              <span className="min-w-0 text-slate-800">
+                {r.account.name} <span className="text-xs text-slate-500">{r.account.number}</span>
+              </span>
+              <span className="text-right tabular-nums text-slate-800">{formatPlain(r.debit, true)}</span>
+              <span className="text-right tabular-nums text-slate-800">{formatPlain(r.credit, true)}</span>
+            </div>
+          ))}
+          <div className="grid grid-cols-[1fr_6.5rem_6.5rem] gap-3 bg-slate-400/10 px-5 py-3 text-[15px] font-semibold text-slate-900 sm:grid-cols-[1fr_9rem_9rem]">
+            <span>Totals</span>
+            <span className="text-right tabular-nums">{formatCents(tb.totalDebit)}</span>
+            <span className="text-right tabular-nums">{formatCents(tb.totalCredit)}</span>
+          </div>
+        </ListSection>
       ) : (
         <Card className="overflow-x-auto">
           <table className="w-full min-w-[28rem] text-sm">

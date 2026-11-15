@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { AppleStatementHeader, ListRow, ListSection, StatTiles, useIsApple } from '../components/apple';
 import { fmtDate } from '../components/format';
 import { ReportShell } from '../components/ReportShell';
 import { Row, Section, StatementCard } from '../components/Statement';
@@ -22,6 +23,8 @@ export function IncomeStatement() {
   const [to, setTo] = useState('');
   const is = useMemo(() => incomeStatement(accounts, entries, from || undefined, to || undefined), [accounts, entries, from, to]);
   const period = periodLabel(from, to);
+  const apple = useIsApple();
+  const company = useSettings((s) => s.companyName);
 
   const csvRows = () => [
     ['Income Statement', period],
@@ -50,11 +53,41 @@ export function IncomeStatement() {
         </>
       }
     >
-      <StatementCard title="Income Statement" period={period}>
-        <Section title="Revenue" lines={is.revenues} totalLabel="Total revenue" total={is.totalRevenue} />
-        <Section title="Expenses" lines={is.expenses} totalLabel="Total expenses" total={is.totalExpenses} />
-        <Row label={is.netIncome >= 0 ? 'Net income' : 'Net loss'} amount={is.netIncome} bold doubleRule />
-      </StatementCard>
+      {apple ? (
+        <div className="space-y-6">
+          <AppleStatementHeader company={company} title="Income Statement" period={period} />
+          <StatTiles
+            tiles={[
+              { label: 'Revenue', cents: is.totalRevenue },
+              { label: 'Expenses', cents: is.totalExpenses },
+              { label: is.netIncome >= 0 ? 'Net income' : 'Net loss', cents: is.netIncome, tone: is.netIncome >= 0 ? 'positive' : 'negative' },
+            ]}
+          />
+          <ListSection title="Revenue">
+            {is.revenues.length === 0 && <ListRow label="None" muted />}
+            {is.revenues.map((l) => (
+              <ListRow key={l.account.id} label={l.account.name} amount={l.amount} />
+            ))}
+            <ListRow label="Total revenue" amount={is.totalRevenue} strong />
+          </ListSection>
+          <ListSection title="Expenses">
+            {is.expenses.length === 0 && <ListRow label="None" muted />}
+            {is.expenses.map((l) => (
+              <ListRow key={l.account.id} label={l.account.name} amount={l.amount} />
+            ))}
+            <ListRow label="Total expenses" amount={is.totalExpenses} strong />
+          </ListSection>
+          <ListSection>
+            <ListRow label={is.netIncome >= 0 ? 'Net income' : 'Net loss'} amount={is.netIncome} strong />
+          </ListSection>
+        </div>
+      ) : (
+        <StatementCard title="Income Statement" period={period}>
+          <Section title="Revenue" lines={is.revenues} totalLabel="Total revenue" total={is.totalRevenue} />
+          <Section title="Expenses" lines={is.expenses} totalLabel="Total expenses" total={is.totalExpenses} />
+          <Row label={is.netIncome >= 0 ? 'Net income' : 'Net loss'} amount={is.netIncome} bold doubleRule />
+        </StatementCard>
+      )}
     </ReportShell>
   );
 }

@@ -311,6 +311,28 @@ html[data-design='apple'] body {
   box-shadow: none;
 }
 
+/* Data tables (ledger, chart of accounts): quiet sentence-case headers and softer rows */
+[data-design='apple'] .data-table thead {
+  text-transform: none;
+  letter-spacing: normal;
+}
+[data-design='apple'] .data-table thead th {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(var(--c-slate-500));
+}
+[data-design='apple'] .data-table tbody td {
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+}
+[data-design='apple'] .data-table tfoot td {
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  background: rgb(var(--c-slate-400) / 0.1);
+}
+
 /* Journal table: quiet header, no cell borders */
 [data-design='apple'] .journal-table thead th {
   background: transparent;
