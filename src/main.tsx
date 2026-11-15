@@ -2,10 +2,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createHashRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { bootstrapCompanies } from './store/companyActions';
 import './index.css';
 import { BalanceSheet } from './pages/BalanceSheet';
 import { IncomeStatement } from './pages/IncomeStatement';
+import { AddTransaction } from './pages/AddTransaction';
 import { Journal } from './pages/Journal';
 import { Ledger } from './pages/Ledger';
 import { Settings } from './pages/Settings';
@@ -21,6 +23,7 @@ const router = createHashRouter([
     element: <Layout />,
     children: [
       { path: '/', element: <Navigate to="/journal" replace /> },
+      { path: '/add', element: <AddTransaction /> },
       { path: '/journal', element: <Journal /> },
       { path: '/ledger', element: <Ledger /> },
       { path: '/t-accounts', element: <TAccounts /> },
@@ -40,6 +43,8 @@ const router = createHashRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <ErrorBoundary>
+      <RouterProvider router={router} />
+    </ErrorBoundary>
   </StrictMode>,
 );

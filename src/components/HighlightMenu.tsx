@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ACCOUNT_TYPES, sortAccounts, TYPE_LABELS } from '../engine/accounts';
 import type { Account } from '../engine/types';
 import { cx } from './format';
@@ -11,6 +11,12 @@ import { Button } from './ui';
  */
 export function HighlightMenu({ accounts, selected, onChange, className }: { accounts: Account[]; selected: Set<string>; onChange: (next: Set<string>) => void; className?: string }) {
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
   const byId = new Map(accounts.map((a) => [a.id, a]));
   const chosen = [...selected].map((id) => byId.get(id)?.name).filter(Boolean) as string[];
   const label = chosen.length === 0 ? 'Highlight' : chosen.length === 1 ? `Highlight: ${chosen[0]}` : `Highlight: ${chosen[0]} +${chosen.length - 1}`;

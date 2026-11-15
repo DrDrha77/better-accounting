@@ -11,6 +11,15 @@ export function useApplyTheme() {
   }, [style]);
   useEffect(() => {
     document.documentElement.dataset.design = design;
+    // index.html loads the fonts for the design you started with; load the other set when you switch.
+    if (!document.head.querySelector(`link[data-fonts="${design}"]`)) {
+      const families = design === 'apple' ? 'family=Inter:wght@400;500;600;700' : 'family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800';
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
+      link.setAttribute('data-fonts', design);
+      document.head.appendChild(link);
+    }
   }, [design]);
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)');

@@ -10,6 +10,7 @@ import { useSlidingIndicator } from './useSlidingIndicator';
 import { useApplyTheme } from './useTheme';
 
 export const NAV = [
+  { to: '/add', label: 'Add a transaction' },
   { to: '/journal', label: 'Journal' },
   { to: '/ledger', label: 'Ledger' },
   { to: '/t-accounts', label: 'T-Accounts' },
