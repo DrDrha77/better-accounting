@@ -8,25 +8,25 @@ interface Line {
   label: string;
   kind: Kind;
   indent?: boolean;
-  /** Which of the three number columns the amount goes in: 1 = items, 2 = subtotals, 3 = grand totals. */
+  /** Number column: 1 = adjustments (net income or loss, drawings), 2 = the accounts, 3 = totals. */
   col?: 1 | 2 | 3;
   amount?: number;
 }
 
 const money = (c: number) => (c < 0 ? `(${formatCents(-c)})` : formatCents(c));
 
-/** The rows of a balance sheet laid out the way a paper worksheet does: items, then subtotals, then totals. */
+/** The rows laid out like the paper worksheet: adjustments in column 1, account balances in column 2, totals in column 3. */
 export function ruledLines(bs: BalanceSheet, showNetIncome: boolean): Line[] {
   const lines: Line[] = [];
   lines.push({ label: 'Assets', kind: 'heading' });
   if (!bs.assets.length) lines.push({ label: 'None', kind: 'item', indent: true });
-  bs.assets.forEach((l) => lines.push({ label: l.account.name, kind: 'item', indent: true, col: 1, amount: l.amount }));
+  bs.assets.forEach((l) => lines.push({ label: l.account.name, kind: 'item', indent: true, col: 2, amount: l.amount }));
   lines.push({ label: 'Total assets', kind: 'total', col: 3, amount: bs.totalAssets });
 
   lines.push({ label: 'Liabilities', kind: 'heading' });
   if (!bs.liabilities.length) lines.push({ label: 'None', kind: 'item', indent: true });
-  bs.liabilities.forEach((l) => lines.push({ label: l.account.name, kind: 'item', indent: true, col: 1, amount: l.amount }));
-  lines.push({ label: 'Total liabilities', kind: 'subtotal', col: 2, amount: bs.totalLiabilities });
+  bs.liabilities.forEach((l) => lines.push({ label: l.account.name, kind: 'item', indent: true, col: 2, amount: l.amount }));
+  lines.push({ label: 'Total liabilities', kind: 'subtotal', col: 3, amount: bs.totalLiabilities });
 
   lines.push({ label: "Owner's equity", kind: 'heading' });
   const capital = bs.equity.filter((l) => !l.account.contra);
@@ -39,7 +39,7 @@ export function ruledLines(bs: BalanceSheet, showNetIncome: boolean): Line[] {
   if (showIncome || drawings.length) {
     lines.push({ label: change < 0 ? 'Decrease in capital' : 'Increase in capital', kind: 'subtotal', col: 2, amount: change });
   }
-  if (capital.length !== 1 || showIncome || drawings.length) lines.push({ label: "Total owner's equity", kind: 'subtotal', col: 2, amount: bs.totalEquity });
+  if (capital.length !== 1 || showIncome || drawings.length) lines.push({ label: "Total owner's equity", kind: 'subtotal', col: 3, amount: bs.totalEquity });
   lines.push({ label: "Total liabilities and owner's equity", kind: 'total', col: 3, amount: bs.totalLiabilitiesAndEquity });
   return lines;
 }
@@ -60,8 +60,8 @@ export function RuledBalanceSheet({ bs, title, period, showNetIncome = true }: {
           <thead className="sr-only">
             <tr>
               <th>Account</th>
-              <th>Amount</th>
-              <th>Subtotal</th>
+              <th>Adjustment</th>
+              <th>Balance</th>
               <th>Total</th>
             </tr>
           </thead>
