@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { AppleStatementHeader, ListRow, ListSection, StatTiles, useIsApple } from '../components/apple';
 import { fmtDate, formatCents } from '../components/format';
 import { ReportShell } from '../components/ReportShell';
-import { Row, Section, StatementCard } from '../components/Statement';
+import { RuledBalanceSheet } from '../components/RuledBalanceSheet';
 import { Field, inputClass, StatusBadge } from '../components/ui';
 import { centsToCsv, type CsvCell } from '../engine/csv';
 import { balanceSheet, type BalanceSheet as BS } from '../engine/reports';
@@ -93,18 +93,7 @@ export function BalanceSheetBody({
           badText={`Out of balance by ${formatCents(Math.abs(bs.difference))}`}
         />
       </div>
-      <StatementCard title={title} period={period}>
-        <Section title="Assets" lines={bs.assets} totalLabel="Total assets" total={bs.totalAssets} />
-        <Section title="Liabilities" lines={bs.liabilities} totalLabel="Total liabilities" total={bs.totalLiabilities} />
-        <Section
-          title="Owner's equity"
-          lines={bs.equity}
-          totalLabel="Total equity"
-          total={bs.totalEquity}
-          extra={showNetIncome || bs.netIncome !== 0 ? <Row label="Net income (to date)" amount={bs.netIncome} indent /> : undefined}
-        />
-        <Row label="Total liabilities and equity" amount={bs.totalLiabilitiesAndEquity} bold doubleRule />
-      </StatementCard>
+      <RuledBalanceSheet bs={bs} title={title} period={period} showNetIncome={showNetIncome} />
     </>
   );
 }
