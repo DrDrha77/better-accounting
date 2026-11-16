@@ -143,6 +143,8 @@ export function describeError(err: unknown, providerName: string): string {
   if (status === 429) return `${providerName} is rate-limiting this key right now (or its quota is used up). Try again in a moment.${said}`;
   if (status === 404) return `${providerName} couldn't find the model this app uses${code}. Your key may not have access to it.${said}`;
   if (status === 400) return `${providerName} rejected the request${code}.${said || ' Your account may not have access to the model.'}`;
+  if (status === 504 && /No answer/.test(message))
+    return `${providerName} didn't answer in time, even after trying other models. Check your internet connection and try again.`;
   if (typeof status === 'number' && status >= 500)
     return `${providerName} had a server problem${code} and still failed after retrying. Try again in a few minutes.${said}`;
   if (err instanceof TypeError || (err as { name?: string })?.name === 'APIConnectionError')

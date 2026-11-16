@@ -35,17 +35,30 @@ export function shouldTryNextModel(err: unknown): boolean {
  * Run a request on each model in turn until one isn't busy. Returns the response and the model
  * that answered; rethrows the last error if every model fails (or the first non-busy error).
  */
-export async function withModelFallback<T>(run: (model: string) => Promise<T>, models: readonly string[] = GEMINI_MODELS): Promise<{ res: T; model: string }> {
+export async function withModelFallback<T>(
+  run: (model: string) => Promise<T>,
+  models: readonly string[] = GEMINI_MODELS,
+  timeoutMs = 45_000,
+): Promise<{ res: T; model: string }> {
   let lastErr: unknown;
   for (const model of models) {
     try {
-      return { res: await run(model), model };
+      return { res: await withTimeout(run(model), timeoutMs), model };
     } catch (err) {
       lastErr = err;
       if (!shouldTryNextModel(err)) throw err;
     }
   }
   throw lastErr;
+}
+
+/** A request that sits there with no answer is treated like a busy model, so the next one gets a turn. */
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(Object.assign(new Error(`No answer after ${Math.round(ms / 1000)} seconds.`), { status: 504 })), ms);
+  });
+  return Promise.race([p, timeout]).finally(() => clearTimeout(timer));
 }
 
 /** The slice of the GoogleGenAI client this parser uses (lets tests pass a fake). */
@@ -153,7 +166,7 @@ export function buildGeminiScanRequest(image: ScanImage, accounts: Account[], to
 export async function scanWithGemini(apiKey: string, image: ScanImage, accounts: Account[], today: string, client?: GeminiClientLike): Promise<ScanOutcome> {
   try {
     const c = client ?? (await defaultClient(apiKey, GEMINI_SCAN_API_VERSION));
-    const { res, model } = await withModelFallback((m) => c.interactions.create(buildGeminiScanRequest(image, accounts, today, m)));
+    const { res, model } = await withModelFallback((m) => c.interactions.create(buildGeminiScanRequest(image, accounts, today, m)), GEMINI_MODELS, 120_000);
     if (res.status && res.status !== 'completed') return { ok: false, reason: `Gemini didn't finish reading the page (status: ${res.status}). Try again.` };
     try {
       const parsed = ScanSchema.safeParse(JSON.parse(res.output_text ?? ''));

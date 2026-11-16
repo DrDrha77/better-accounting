@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TYPE_LABELS } from '../engine/accounts';
 import { todayISO } from '../engine/journal';
@@ -56,6 +56,15 @@ export function ScanPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<(ScanImage & { previewUrl: string; name: string }) | null>(null);
   const [busy, setBusy] = useState(false);
+  const [seconds, setSeconds] = useState(0);
+  const runId = useRef(0);
+
+  useEffect(() => {
+    if (!busy) return;
+    setSeconds(0);
+    const t = setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [busy]);
   const [plan, setPlan] = useState<ScanPlan | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [startFresh, setStartFresh] = useState(false);
@@ -84,7 +93,9 @@ export function ScanPage() {
     setErrors([]);
     setPlan(null);
     setDone(null);
+    const id = ++runId.current;
     const out = await scan(provider, apiKey, image, accounts, todayISO());
+    if (id !== runId.current) return; // cancelled while waiting
     setBusy(false);
     if (!out.ok) return setErrors([out.reason]);
     setReadBy(out.model && out.model !== PROVIDERS[provider].model ? out.model : null);
@@ -146,7 +157,19 @@ export function ScanPage() {
               </Button>
             </>
           )}
-          {busy && <span className="text-sm text-slate-500">This can take up to a minute for a full page.</span>}
+          {busy && (
+            <>
+              <span className="text-sm text-slate-500">Reading… {seconds}s. A full page can take up to a minute or two.</span>
+              <Button
+                onClick={() => {
+                  runId.current++;
+                  setBusy(false);
+                }}
+              >
+                Cancel
+              </Button>
+            </>
+          )}
         </div>
       )}
 

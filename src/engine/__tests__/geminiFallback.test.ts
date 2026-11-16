@@ -68,3 +68,19 @@ describe('Gemini backup models', () => {
     expect(asked).toEqual(['gemini-3.8-flash', 'gemini-3.6-flash']);
   });
 });
+
+describe('stalled requests', () => {
+  it('moves to the next model when one never answers', async () => {
+    const tried: string[] = [];
+    const r = await withModelFallback(
+      (m) => {
+        tried.push(m);
+        return m === GEMINI_MODELS[0] ? new Promise<string>(() => {}) : Promise.resolve('ok');
+      },
+      GEMINI_MODELS,
+      30,
+    );
+    expect(r.model).toBe(GEMINI_MODELS[1]);
+    expect(tried).toEqual([GEMINI_MODELS[0], GEMINI_MODELS[1]]);
+  });
+});

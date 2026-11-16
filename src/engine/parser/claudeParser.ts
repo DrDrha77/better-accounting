@@ -50,7 +50,7 @@ export function buildRequest(text: string, ctx: ParseContext) {
 async function defaultClient(apiKey: string): Promise<ClaudeClientLike> {
   const { default: Anthropic } = await import('@anthropic-ai/sdk');
   // The key belongs to the person using this browser; it goes only to api.anthropic.com.
-  return new Anthropic({ apiKey, dangerouslyAllowBrowser: true, maxRetries: 1 }) as unknown as ClaudeClientLike;
+  return new Anthropic({ apiKey, dangerouslyAllowBrowser: true, maxRetries: 1, timeout: 120_000 }) as unknown as ClaudeClientLike;
 }
 
 export class ClaudeParser implements TransactionParser {
