@@ -487,7 +487,7 @@ const ACCENT_CHOICES: { value: AccentPref; label: string; swatch: string }[] = [
 ];
 
 function LayoutCard() {
-  const { tabPosition, textSize, accent, density, hiddenTabs, startPage, setTabPosition, setTextSize, setAccent, setDensity, setTabHidden, setStartPage } =
+  const { tabPosition, textSize, accent, density, hiddenTabs, startPage, showIntro, setShowIntro, setTabPosition, setTextSize, setAccent, setDensity, setTabHidden, setStartPage } =
     useSettings();
   const shown = ALL_TABS.filter((t) => t.to === '/settings' || !hiddenTabs.includes(t.to));
   return (
@@ -552,6 +552,11 @@ function LayoutCard() {
           </div>
         </div>
       </div>
+
+      <label className="mt-6 flex items-center gap-2 text-sm text-slate-800">
+        <input type="checkbox" className="h-4 w-4 accent-cyan-600" checked={showIntro} onChange={(e) => setShowIntro(e.target.checked)} />
+        Play the opening intro when the app starts
+      </label>
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2">
         <div>
