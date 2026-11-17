@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { QuickPost } from '../components/QuickPost';
 import { ScanPage } from '../components/ScanPage';
 import { TransactionComposer } from '../components/TransactionComposer';
@@ -6,6 +7,10 @@ import { Card, PageHeader } from '../components/ui';
 
 /** One place to add transactions: type it, post a typical one by hand, or scan a page. */
 export function AddTransaction() {
+  const location = useLocation();
+  useEffect(() => {
+    if ((location.state as { scrollTo?: string } | null)?.scrollTo === 'scan') document.getElementById('scan')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [location.state]);
   return (
     <div>
       <PageHeader title="Add a transaction" subtitle="Type it in plain English or scan a page. Manual add is at the bottom. Everything lands in the journal and updates every report." />
@@ -15,7 +20,7 @@ export function AddTransaction() {
           <p className="mb-3 text-sm text-slate-500">Type it in plain English, like “Bought a car for 4000”, and check the entry before it’s saved.</p>
           <TransactionComposer showManualLink={false} />
         </div>
-        <div className="border-t border-slate-400/25 pt-5">
+        <div id="scan" className="scroll-mt-24 border-t border-slate-400/25 pt-5">
           <ScanPage />
         </div>
         <div className="border-t border-slate-400/25 pt-5">

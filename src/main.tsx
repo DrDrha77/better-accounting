@@ -9,6 +9,7 @@ import './index.css';
 import { BalanceSheet } from './pages/BalanceSheet';
 import { IncomeStatement } from './pages/IncomeStatement';
 import { AddTransaction } from './pages/AddTransaction';
+import { Home } from './pages/Home';
 import { Journal } from './pages/Journal';
 import { Ledger } from './pages/Ledger';
 import { Settings } from './pages/Settings';
@@ -28,6 +29,7 @@ const router = createHashRouter([
     element: <Layout />,
     children: [
       { path: '/', element: <StartRedirect /> },
+      { path: '/home', element: <Home /> },
       { path: '/add', element: <AddTransaction /> },
       { path: '/journal', element: <Journal /> },
       { path: '/ledger', element: <Ledger /> },

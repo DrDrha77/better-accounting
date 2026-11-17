@@ -25,7 +25,7 @@ export interface Tile {
 /** Big-number summary tiles at the top of a statement, like the numbers on an Apple product page. */
 export function StatTiles({ tiles, compact = false }: { tiles: Tile[]; compact?: boolean }) {
   return (
-    <div className={cx('grid gap-3', tiles.length === 2 && 'sm:grid-cols-2', tiles.length >= 3 && 'sm:grid-cols-3')}>
+    <div className={cx('grid gap-3', tiles.length === 2 && 'sm:grid-cols-2', tiles.length === 3 && 'sm:grid-cols-3', tiles.length >= 4 && 'sm:grid-cols-2 lg:grid-cols-4')}>
       {tiles.map((t) => (
         <div key={t.label} className={cx(compact ? 'field rounded-2xl p-4' : 'card rounded-3xl p-5 sm:p-6')}>
           <div className="text-sm font-medium text-slate-500">{t.label}</div>
