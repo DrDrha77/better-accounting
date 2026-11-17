@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createHashRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { Layout, useStartPath } from './components/Layout';
+import { Splash } from './components/Splash';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { bootstrapCompanies } from './store/companyActions';
 import './index.css';
@@ -49,6 +50,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
       <RouterProvider router={router} />
+      <Splash />
     </ErrorBoundary>
   </StrictMode>,
 );

@@ -16,6 +16,8 @@ export type AccentPref = 'default' | 'blue' | 'purple' | 'orange' | 'pink';
 export type DensityPref = 'comfortable' | 'compact';
 
 interface SettingsState {
+  /** Play the short animated intro each time the app opens. */
+  showIntro: boolean;
   /** Where the page tabs go: along the top bar or in a left side bar (wide screens). */
   tabPosition: TabPosition;
   textSize: TextSize;
@@ -56,13 +58,15 @@ interface SettingsState {
   setDensity(v: DensityPref): void;
   setTabHidden(path: string, hidden: boolean): void;
   setStartPage(path: string): void;
+  setShowIntro(v: boolean): void;
 }
 
-type Persisted = Pick<SettingsState, 'tabPosition' | 'textSize' | 'accent' | 'density' | 'hiddenTabs' | 'startPage' | 'aiProvider' | 'apiKeys' | 'aiMode' | 'theme' | 'style' | 'design' | 'companyName' | 'entryDate' | 'periodFrom' | 'lastBackupAt'>;
+type Persisted = Pick<SettingsState, 'showIntro' | 'tabPosition' | 'textSize' | 'accent' | 'density' | 'hiddenTabs' | 'startPage' | 'aiProvider' | 'apiKeys' | 'aiMode' | 'theme' | 'style' | 'design' | 'companyName' | 'entryDate' | 'periodFrom' | 'lastBackupAt'>;
 
 export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
+      showIntro: true,
       tabPosition: 'top',
       textSize: 'md',
       accent: 'default',
@@ -92,12 +96,14 @@ export const useSettings = create<SettingsState>()(
       setTabHidden: (path, hidden) =>
         set((s) => ({ hiddenTabs: hidden ? [...new Set([...s.hiddenTabs, path])] : s.hiddenTabs.filter((p) => p !== path) })),
       setStartPage: (startPage) => set({ startPage }),
+      setShowIntro: (showIntro) => set({ showIntro }),
     }),
     {
       name: 'better-accounting:settings',
       version: 7,
       storage: createJSONStorage(() => safeLocalStorage),
       partialize: (s): Persisted => ({
+        showIntro: s.showIntro,
         tabPosition: s.tabPosition,
         textSize: s.textSize,
         accent: s.accent,
@@ -143,6 +149,7 @@ export const useSettings = create<SettingsState>()(
           density: p.density ?? 'comfortable',
           hiddenTabs: Array.isArray(p.hiddenTabs) ? p.hiddenTabs : [],
           startPage: p.startPage ?? '/add',
+          showIntro: p.showIntro ?? true,
         } as Persisted;
       },
     },
