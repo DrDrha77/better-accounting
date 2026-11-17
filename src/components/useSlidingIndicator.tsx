@@ -24,16 +24,23 @@ export function useSlidingIndicator<T extends HTMLElement>(deps: DependencyList)
       if (!c) return;
       const el = c.querySelector<HTMLElement>('[data-tab][aria-current="page"], [data-tab][data-active="true"]');
       if (!el || el.offsetParent === null) return setBox(null);
-      const cr = c.getBoundingClientRect();
-      const r = el.getBoundingClientRect();
-      setBox({ left: r.left - cr.left + c.scrollLeft, top: r.top - cr.top + c.scrollTop, width: r.width, height: r.height });
+      // Layout units (offset*) are not affected by the page's text-size zoom, unlike getBoundingClientRect.
+      const next = { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight };
+      setBox((b) => (b && b.left === next.left && b.top === next.top && b.width === next.width && b.height === next.height ? b : next));
     };
     measure();
     // Only glide after the first placement, so the pill doesn't fly in from the corner on load.
     const raf = requestAnimationFrame(() => setAnimate(true));
     window.addEventListener('resize', measure);
     void document.fonts?.ready.then(measure);
+    // Re-place the pill whenever the tabs change size (fonts loading, text size, tabs shown or hidden).
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
+    if (containerRef.current) {
+      ro?.observe(containerRef.current);
+      containerRef.current.querySelectorAll('[data-tab]').forEach((t) => ro?.observe(t));
+    }
     return () => {
+      ro?.disconnect();
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', measure);
     };
