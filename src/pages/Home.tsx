@@ -15,6 +15,7 @@ const DESCRIPTIONS: Record<string, string> = {
   '/ledger': 'Each account’s activity with a running balance.',
   '/t-accounts': 'Debits on the left, credits on the right.',
   '/trial-balance': 'Check that debits equal credits.',
+  '/worksheet': 'Trial balance carried across to the income statement and balance sheet.',
   '/balance-sheet': 'What you own, what you owe, and the owner’s equity.',
   '/income-statement': 'Revenue less expenses for a period.',
   '/settings': 'Companies, accounts, opening balances, AI and appearance.',

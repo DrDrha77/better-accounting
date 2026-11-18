@@ -14,6 +14,7 @@ import { Journal } from './pages/Journal';
 import { Ledger } from './pages/Ledger';
 import { Settings } from './pages/Settings';
 import { TAccounts } from './pages/TAccounts';
+import { Worksheet } from './pages/Worksheet';
 import { TrialBalance } from './pages/TrialBalance';
 
 // Make sure the company registry exists and the active company's data is saved under its own keys.
@@ -35,6 +36,7 @@ const router = createHashRouter([
       { path: '/ledger', element: <Ledger /> },
       { path: '/t-accounts', element: <TAccounts /> },
       { path: '/trial-balance', element: <TrialBalance /> },
+      { path: '/worksheet', element: <Worksheet /> },
       { path: '/balance-sheet', element: <BalanceSheet /> },
       { path: '/income-statement', element: <IncomeStatement /> },
       { path: '/settings', element: <Settings /> },
