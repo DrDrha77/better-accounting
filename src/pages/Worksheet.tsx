@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { cx, fmtDate, formatCents } from '../components/format';
 import { ReportShell } from '../components/ReportShell';
 import { Card, EmptyState, Field, inputClass, StatusBadge } from '../components/ui';
@@ -15,6 +15,10 @@ export function Worksheet() {
   const company = useCompanyName();
   const [asOf, setAsOf] = useState('');
   const ws = useMemo(() => worksheet(accounts, entries, asOf || undefined), [accounts, entries, asOf]);
+  // Balance sheet accounts first, then a dotted gap, then the income statement accounts.
+  const isIncome = (t: string) => t === 'revenue' || t === 'expense';
+  const ordered = useMemo(() => [...ws.rows.filter((r) => !isIncome(r.account.type)), ...ws.rows.filter((r) => isIncome(r.account.type))], [ws]);
+  const firstIncome = ordered.findIndex((r) => isIncome(r.account.type));
   const period = asOf ? `As of ${fmtDate(asOf)}` : 'All dates';
   const loss = ws.netIncome < 0;
 
@@ -71,14 +75,21 @@ export function Worksheet() {
                   </tr>
                 </thead>
                 <tbody>
-                  {ws.rows.map((r) => (
-                    <tr key={r.account.id} className="border-b border-slate-400/50 text-slate-900">
+                  {ordered.map((r, i) => (
+                    <Fragment key={r.account.id}>
+                      {i === firstIncome && i > 0 && (
+                        <tr aria-hidden="true" className="h-5">
+                          <td colSpan={8} className="border-y-2 border-dashed border-slate-500/70 bg-slate-400/5" />
+                        </tr>
+                      )}
+                    <tr className="border-b border-slate-400/50 text-slate-900">
                       <td className="px-2 py-1.5 text-slate-500">{r.account.number}</td>
                       <td className={cx(edge, 'px-3 py-1.5')}>{r.account.name}</td>
                       {[r.tbDebit, r.tbCredit, r.isDebit, r.isCredit, r.bsDebit, r.bsCredit].map((v, i) => (
                         <td key={i} className={cx(edge, num, i % 2 === 0 && 'border-l-2')}>{cell(v)}</td>
                       ))}
                     </tr>
+                    </Fragment>
                   ))}
                   <tr className="border-b border-slate-400/50 font-semibold text-slate-900">
                     <td />
