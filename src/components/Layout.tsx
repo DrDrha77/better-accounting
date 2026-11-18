@@ -15,6 +15,7 @@ export const ALL_TABS = [
   { to: '/ledger', label: 'Ledger' },
   { to: '/t-accounts', label: 'T-Accounts' },
   { to: '/trial-balance', label: 'Trial Balance' },
+  { to: '/worksheet', label: 'Work Sheet' },
   { to: '/balance-sheet', label: 'Balance Sheet' },
   { to: '/income-statement', label: 'Income Statement' },
   { to: '/settings', label: 'Settings' },
