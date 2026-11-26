@@ -18,6 +18,7 @@ const DESCRIPTIONS: Record<string, string> = {
   '/worksheet': 'Trial balance carried across to the income statement and balance sheet.',
   '/balance-sheet': 'What you own, what you owe, and the owner’s equity.',
   '/income-statement': 'Revenue less expenses for a period.',
+  '/owners-equity': 'How the owner’s capital changed: net income less drawings.',
   '/settings': 'Companies, accounts, opening balances, AI and appearance.',
 };
 

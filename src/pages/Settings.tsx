@@ -4,6 +4,7 @@ import { OpeningBalancesCard } from '../components/OpeningBalancesCard';
 import { cx, downloadFile, fmtDate, formatCents } from '../components/format';
 import { Button, Card, ErrorList, Field, inputClass, PageHeader } from '../components/ui';
 import { lazyAiParser } from '../components/useTransactionParser';
+import { autoGroup } from '../engine/classify';
 import { ACCOUNT_TYPES, sortAccounts, suggestAccountNumber, SYSTEM_KEYS, TYPE_LABELS } from '../engine/accounts';
 import { todayISO } from '../engine/journal';
 import type { AiProvider } from '../engine/parser/aiShared';
@@ -190,7 +191,7 @@ function CompaniesCard() {
 // ---------------------------------------------------------------- Chart of accounts
 
 function ChartOfAccountsCard() {
-  const { accounts, entries, addAccount, deleteAccount } = useBooks();
+  const { accounts, entries, addAccount, deleteAccount, setAccountGroup } = useBooks();
   const [name, setName] = useState('');
   const [type, setType] = useState<AccountType>('expense');
   const [errors, setErrors] = useState<string[]>([]);
@@ -255,6 +256,7 @@ function ChartOfAccountsCard() {
             <tr className="border-b border-slate-400/30">
               <th className="px-2.5 py-2">Name</th>
               <th className="px-2.5 py-2">Type</th>
+              <th className="px-2.5 py-2">Balance sheet class</th>
               <th className="px-2.5 py-2">Use</th>
               <th className="w-24 px-2.5 py-2">
                 <span className="sr-only">Delete</span>
@@ -269,6 +271,22 @@ function ChartOfAccountsCard() {
                 <tr key={a.id}>
                   <td className="px-2.5 py-2.5 text-slate-900">{a.name}</td>
                   <td className="px-2.5 py-2.5 text-slate-600">{TYPE_LABELS[a.type]}</td>
+                  <td className="px-2.5 py-1.5">
+                    {a.type === 'asset' || a.type === 'liability' ? (
+                      <select
+                        aria-label={`Balance sheet class for ${a.name}`}
+                        className={cx(inputClass, 'py-1 text-sm')}
+                        value={a.group ?? 'auto'}
+                        onChange={(e) => setAccountGroup(a.id, e.target.value === 'auto' ? undefined : (e.target.value as 'current' | 'noncurrent'))}
+                      >
+                        <option value="auto">Auto ({autoGroup(a) === 'current' ? 'current' : a.type === 'asset' ? 'fixed' : 'long-term'})</option>
+                        <option value="current">Current</option>
+                        <option value="noncurrent">{a.type === 'asset' ? 'Fixed' : 'Long-term'}</option>
+                      </select>
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
+                  </td>
                   <td className="px-2.5 py-2.5 text-slate-600">{used ? `${used} ${used === 1 ? 'entry' : 'entries'}` : '—'}</td>
                   <td className="px-2.5 py-1.5 text-right">
                     <button

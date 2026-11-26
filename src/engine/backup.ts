@@ -101,6 +101,7 @@ export function parseBackup(text: string): RestoreResult {
       type: a.type as Account['type'],
       ...(a.contra ? { contra: true } : {}),
       ...(typeof a.systemKey === 'string' ? { systemKey: a.systemKey } : {}),
+      ...(a.group === 'current' || a.group === 'noncurrent' ? { group: a.group } : {}),
     });
   }
   if (!accounts.length) return { ok: false, reason: 'The backup has no accounts.' };
