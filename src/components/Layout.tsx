@@ -62,7 +62,7 @@ function SideNav({ apple }: { apple: boolean }) {
 
 const tabClass = ({ isActive }: { isActive: boolean }) =>
   cx(
-    'relative z-10 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[15px] transition-colors duration-300',
+    'relative z-10 whitespace-nowrap rounded-full px-3 py-1.5 text-[15px] transition-colors duration-300',
     isActive ? 'font-semibold text-white' : 'text-slate-700 hover:bg-slate-500/10 hover:text-slate-900',
   );
 
@@ -194,14 +194,14 @@ function ClassicLayout() {
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 px-3 pt-3 sm:px-4 print:hidden">
         <div className="card-strong mx-auto flex max-w-[1400px] items-center justify-between gap-4 rounded-2xl px-4 py-2.5 sm:px-5">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
+          <div className="flex shrink-0 flex-col items-start gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 xl:flex-col xl:items-start">
             <NavLink to="/home" className="brand whitespace-nowrap text-2xl font-extrabold text-cyan-800">
               Better Accounting
             </NavLink>
             <CompanySwitcher />
           </div>
 
-          <nav ref={tabsRef} className={cx('relative hidden items-center gap-1', !side && 'lg:flex')} aria-label="Main">
+          <nav ref={tabsRef} className={cx('relative hidden min-w-0 items-center gap-0.5', !side && 'xl:flex')} aria-label="Main">
             {tabPill}
             {nav.map((n) => (
               <NavLink key={n.to} to={n.to} data-tab className={tabClass}>
@@ -212,7 +212,7 @@ function ClassicLayout() {
 
           <button
             type="button"
-            className="field rounded-full px-4 py-1.5 text-sm font-semibold text-slate-700 lg:hidden"
+            className={cx('field rounded-full px-4 py-1.5 text-sm font-semibold text-slate-700', side ? 'lg:hidden' : 'xl:hidden')}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((o) => !o)}
           >
@@ -221,7 +221,7 @@ function ClassicLayout() {
         </div>
 
         {menuOpen && (
-          <nav className="card-strong pop-in mx-auto mt-2 max-w-[1400px] space-y-1 rounded-2xl p-2 lg:hidden" aria-label="Main">
+          <nav className={cx('card-strong pop-in mx-auto mt-2 max-w-[1400px] space-y-1 rounded-2xl p-2', side ? 'lg:hidden' : 'xl:hidden')} aria-label="Main">
             {nav.map((n) => (
               <NavLink
                 key={n.to}
