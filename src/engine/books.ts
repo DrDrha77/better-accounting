@@ -102,6 +102,21 @@ export function renameAccount(books: Books, id: string, name: string): Result {
   return { ok: true, books: { ...books, accounts: books.accounts.map((a) => (a.id === id ? { ...a, name: trimmed } : a)) } };
 }
 
+export function setAccountGroup(books: Books, id: string, group: 'current' | 'noncurrent' | undefined): Result {
+  if (!books.accounts.some((a) => a.id === id)) return { ok: false, errors: ['Account not found.'] };
+  return {
+    ok: true,
+    books: {
+      ...books,
+      accounts: books.accounts.map((a) => {
+        if (a.id !== id) return a;
+        const { group: _old, ...rest } = a;
+        return group ? { ...rest, group } : rest;
+      }),
+    },
+  };
+}
+
 export function deleteAccount(books: Books, id: string): Result {
   if (accountHasActivity(id, books.entries))
     return { ok: false, errors: ["This account has transactions and can't be deleted."] };

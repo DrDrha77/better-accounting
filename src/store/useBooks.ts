@@ -19,6 +19,7 @@ interface BooksState extends Books {
   addAccount(input: ops.NewAccount): ActionResult;
   renameAccount(id: string, name: string): ActionResult;
   deleteAccount(id: string): ActionResult;
+  setAccountGroup(id: string, group: 'current' | 'noncurrent' | undefined): ActionResult;
   loadSample(): void;
   reset(): void;
   /** Replace everything with a validated backup. */
@@ -48,6 +49,7 @@ export const useBooks = create<BooksState>()(
         addAccount: (input) => apply((b) => ops.addAccount(b, input)),
         renameAccount: (id, name) => apply((b) => ops.renameAccount(b, id, name)),
         deleteAccount: (id) => apply((b) => ops.deleteAccount(b, id)),
+        setAccountGroup: (id, group) => apply((b) => ops.setAccountGroup(b, id, group)),
         loadSample: () => set(buildSampleBooks()),
         reset: () => set(ops.emptyBooks()),
         restore: (books) => set({ accounts: books.accounts, entries: books.entries, nextSeq: books.nextSeq }),

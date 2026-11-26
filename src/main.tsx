@@ -14,6 +14,7 @@ import { Journal } from './pages/Journal';
 import { Ledger } from './pages/Ledger';
 import { Settings } from './pages/Settings';
 import { TAccounts } from './pages/TAccounts';
+import { OwnersEquity } from './pages/OwnersEquity';
 import { Worksheet } from './pages/Worksheet';
 import { TrialBalance } from './pages/TrialBalance';
 
@@ -37,6 +38,7 @@ const router = createHashRouter([
       { path: '/t-accounts', element: <TAccounts /> },
       { path: '/trial-balance', element: <TrialBalance /> },
       { path: '/worksheet', element: <Worksheet /> },
+      { path: '/owners-equity', element: <OwnersEquity /> },
       { path: '/balance-sheet', element: <BalanceSheet /> },
       { path: '/income-statement', element: <IncomeStatement /> },
       { path: '/settings', element: <Settings /> },

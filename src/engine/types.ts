@@ -14,6 +14,8 @@ export interface Account {
   contra?: boolean;
   /** Stable key used by the parser so renaming an account doesn't break templates. */
   systemKey?: string;
+  /** Classified balance sheet: current, or non-current (fixed asset / long-term liability). Auto-detected when unset. */
+  group?: 'current' | 'noncurrent';
 }
 
 export interface JournalLine {

@@ -1,4 +1,4 @@
-import type { BalanceSheet } from '../engine/reports';
+import { classify, type BalanceSheet } from '../engine/reports';
 import { useCompanyName } from '../store/useCompanies';
 import { cx, formatCents } from './format';
 import { Card } from './ui';
@@ -44,10 +44,36 @@ export function ruledLines(bs: BalanceSheet, showNetIncome: boolean): Line[] {
   return lines;
 }
 
+/** Classified layout: current and fixed assets, current and long-term liabilities, with subtotals in the last column. */
+export function classifiedLines(bs: BalanceSheet): Line[] {
+  const c = classify(bs);
+  const lines: Line[] = [];
+  const group = (title: string, items: typeof c.currentAssets, totalLabel: string, total: number) => {
+    if (!items.length) return;
+    lines.push({ label: title, kind: 'heading' });
+    items.forEach((l) => lines.push({ label: l.account.name, kind: 'item', indent: true, col: 2, amount: l.amount }));
+    lines.push({ label: totalLabel, kind: 'subtotal', col: 3, amount: total });
+  };
+  lines.push({ label: 'Assets', kind: 'heading' });
+  if (!bs.assets.length) lines.push({ label: 'None', kind: 'item', indent: true });
+  group('Current assets', c.currentAssets, 'Total current assets', c.totalCurrentAssets);
+  group('Fixed assets', c.fixedAssets, 'Total fixed assets', c.totalFixedAssets);
+  lines.push({ label: 'Total assets', kind: 'total', col: 3, amount: bs.totalAssets });
+
+  lines.push({ label: "Liabilities and owner's equity", kind: 'heading' });
+  group('Current liabilities', c.currentLiabilities, 'Total current liabilities', c.totalCurrentLiabilities);
+  group('Long-term liabilities', c.longTermLiabilities, 'Total long-term liabilities', c.totalLongTermLiabilities);
+  lines.push({ label: 'Total liabilities', kind: 'subtotal', col: 3, amount: bs.totalLiabilities });
+  lines.push({ label: "Owner's equity", kind: 'heading' });
+  lines.push({ label: 'Owner’s capital at the end of the period', kind: 'item', indent: true, col: 3, amount: bs.totalEquity });
+  lines.push({ label: "Total liabilities and owner's equity", kind: 'total', col: 3, amount: bs.totalLiabilitiesAndEquity });
+  return lines;
+}
+
 /** Classic-design balance sheet on ruled paper: a name column and three number columns. */
-export function RuledBalanceSheet({ bs, title, period, showNetIncome = true }: { bs: BalanceSheet; title: string; period: string; showNetIncome?: boolean }) {
+export function RuledBalanceSheet({ bs, title, period, showNetIncome = true, classified = false }: { bs: BalanceSheet; title: string; period: string; showNetIncome?: boolean; classified?: boolean }) {
   const company = useCompanyName();
-  const lines = ruledLines(bs, showNetIncome);
+  const lines = classified ? classifiedLines(bs) : ruledLines(bs, showNetIncome);
   return (
     <Card className="mx-auto max-w-3xl overflow-hidden px-4 py-6 sm:px-6">
       <div className="mb-4 text-center">

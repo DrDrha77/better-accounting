@@ -18,6 +18,7 @@ export const ALL_TABS = [
   { to: '/worksheet', label: 'Work Sheet' },
   { to: '/balance-sheet', label: 'Balance Sheet' },
   { to: '/income-statement', label: 'Income Statement' },
+  { to: '/owners-equity', label: "Owner's Equity" },
   { to: '/settings', label: 'Settings' },
 ];
 

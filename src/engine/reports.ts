@@ -1,3 +1,4 @@
+import { accountGroup } from './classify';
 import { sortAccounts, typeNormalSide } from './accounts';
 import { activityByAccount, filterEntries } from './ledger';
 import type { Account, AccountType, Cents, ISODate, JournalEntry } from './types';
@@ -143,6 +144,38 @@ export function openingStatement(accounts: Account[], entries: JournalEntry[]): 
   const opening = entries.find((e) => e.kind === 'opening');
   if (!opening) return null;
   return balanceSheetFromEntries(accounts, [opening], opening.date);
+}
+
+// ---------- Classified balance sheet ----------
+
+export interface ClassifiedBalanceSheet {
+  currentAssets: StatementLine[];
+  fixedAssets: StatementLine[];
+  currentLiabilities: StatementLine[];
+  longTermLiabilities: StatementLine[];
+  totalCurrentAssets: Cents;
+  totalFixedAssets: Cents;
+  totalCurrentLiabilities: Cents;
+  totalLongTermLiabilities: Cents;
+}
+
+/** Split a balance sheet's assets and liabilities into current and fixed / long-term groups. */
+export function classify(bs: BalanceSheet): ClassifiedBalanceSheet {
+  const cur = (l: StatementLine) => accountGroup(l.account) === 'current';
+  const currentAssets = bs.assets.filter(cur);
+  const fixedAssets = bs.assets.filter((l) => !cur(l));
+  const currentLiabilities = bs.liabilities.filter(cur);
+  const longTermLiabilities = bs.liabilities.filter((l) => !cur(l));
+  return {
+    currentAssets,
+    fixedAssets,
+    currentLiabilities,
+    longTermLiabilities,
+    totalCurrentAssets: total(currentAssets),
+    totalFixedAssets: total(fixedAssets),
+    totalCurrentLiabilities: total(currentLiabilities),
+    totalLongTermLiabilities: total(longTermLiabilities),
+  };
 }
 
 // ---------- Statement of owner's equity ----------

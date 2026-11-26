@@ -5,7 +5,7 @@ import { ReportShell } from '../components/ReportShell';
 import { RuledBalanceSheet } from '../components/RuledBalanceSheet';
 import { Field, inputClass, StatusBadge } from '../components/ui';
 import { centsToCsv, type CsvCell } from '../engine/csv';
-import { balanceSheet, type BalanceSheet as BS } from '../engine/reports';
+import { balanceSheet, classify, type BalanceSheet as BS } from '../engine/reports';
 import { useBooks } from '../store/useBooks';
 import { useCompanyName } from '../store/useCompanies';
 
@@ -31,6 +31,7 @@ export function BalanceSheetBody({
   period,
   showNetIncome = true,
   compact = false,
+  classified = false,
 }: {
   bs: BS;
   title: string;
@@ -38,9 +39,43 @@ export function BalanceSheetBody({
   showNetIncome?: boolean;
   /** Used inside another card (Settings): smaller tiles, no centered header. */
   compact?: boolean;
+  /** Group assets into current and fixed, and liabilities into current and long-term. */
+  classified?: boolean;
 }) {
   const apple = useIsApple();
   const company = useCompanyName();
+  const c = classify(bs);
+  if (apple && classified) {
+    const group = (name: string, items: typeof c.currentAssets, label: string, total: number) =>
+      items.length ? (
+        <ListSection title={name} inset={compact}>
+          {items.map((l) => (
+            <ListRow key={l.account.id} label={l.account.name} amount={l.amount} />
+          ))}
+          <ListRow label={label} amount={total} strong />
+        </ListSection>
+      ) : null;
+    return (
+      <div className="space-y-6">
+        {!compact && <AppleStatementHeader company={company} title={title} period={period} />}
+        <StatTiles compact={compact} tiles={[{ label: 'Total assets', cents: bs.totalAssets }, { label: 'Total liabilities', cents: bs.totalLiabilities }, { label: 'Total equity', cents: bs.totalEquity }]} />
+        <div className="flex justify-center">
+          <StatusBadge ok={bs.balanced} okText="Assets = Liabilities + Equity ✓" badText={`Out of balance by ${formatCents(Math.abs(bs.difference))}`} />
+        </div>
+        {group('Current assets', c.currentAssets, 'Total current assets', c.totalCurrentAssets)}
+        {group('Fixed assets', c.fixedAssets, 'Total fixed assets', c.totalFixedAssets)}
+        <ListSection inset={compact}>
+          <ListRow label="Total assets" amount={bs.totalAssets} strong />
+        </ListSection>
+        {group('Current liabilities', c.currentLiabilities, 'Total current liabilities', c.totalCurrentLiabilities)}
+        {group('Long-term liabilities', c.longTermLiabilities, 'Total long-term liabilities', c.totalLongTermLiabilities)}
+        <ListSection title="Owner's equity" inset={compact}>
+          <ListRow label="Owner’s capital at the end of the period" amount={bs.totalEquity} />
+          <ListRow label="Total liabilities and owner's equity" amount={bs.totalLiabilitiesAndEquity} strong />
+        </ListSection>
+      </div>
+    );
+  }
   if (apple) {
     const equityRows = showNetIncome || bs.netIncome !== 0;
     return (
@@ -93,7 +128,7 @@ export function BalanceSheetBody({
           badText={`Out of balance by ${formatCents(Math.abs(bs.difference))}`}
         />
       </div>
-      <RuledBalanceSheet bs={bs} title={title} period={period} showNetIncome={showNetIncome} />
+      <RuledBalanceSheet bs={bs} title={title} period={period} showNetIncome={showNetIncome} classified={classified} />
     </>
   );
 }
@@ -101,6 +136,7 @@ export function BalanceSheetBody({
 export function BalanceSheet() {
   const { accounts, entries } = useBooks();
   const [asOf, setAsOf] = useState('');
+  const [classified, setClassified] = useState(false);
   const bs = useMemo(() => balanceSheet(accounts, entries, asOf || undefined), [accounts, entries, asOf]);
   const period = asOf ? `As of ${fmtDate(asOf)}` : 'As of the latest entry';
 
@@ -116,7 +152,26 @@ export function BalanceSheet() {
         </Field>
       }
     >
-      <BalanceSheetBody bs={bs} title="Balance Sheet" period={period} />
+      <div className="mb-4 flex justify-center">
+        <div role="radiogroup" aria-label="Balance sheet style" className="field inline-flex gap-1 rounded-full p-1 print:hidden">
+          {[
+            { v: false, label: 'Regular' },
+            { v: true, label: 'Classified' },
+          ].map((o) => (
+            <button
+              key={o.label}
+              type="button"
+              role="radio"
+              aria-checked={classified === o.v}
+              onClick={() => setClassified(o.v)}
+              className={classified === o.v ? 'seg-active pill-active rounded-full px-4 py-1.5 text-sm font-medium text-white' : 'rounded-full px-4 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900'}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <BalanceSheetBody bs={bs} title={classified ? 'Classified Balance Sheet' : 'Balance Sheet'} period={period} classified={classified} />
     </ReportShell>
   );
 }
